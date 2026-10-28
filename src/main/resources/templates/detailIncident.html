@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Détail de l'incident</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<main class="page">
+    <h1>
+        Incident n° <span th:text="${incident.id}"></span>
+        <span class="statut" th:text="${incident.statut.libelle}"></span>
+    </h1>
+
+    <section class="carte">
+        <h2>Description</h2>
+        <p th:text="${incident.description}"></p>
+    </section>
+
+    <section class="carte">
+        <h2>Localisation</h2>
+        <dl>
+            <dt>Station</dt>
+            <dd th:text="${incident.equipement.station.nom}"></dd>
+            <dt>Équipement</dt>
+            <dd th:text="|${incident.equipement.reference} – ${incident.equipement.description}|"></dd>
+            <dt>Type</dt>
+            <dd th:text="${incident.equipement.type}"></dd>
+        </dl>
+    </section>
+
+    <section class="carte">
+        <h2>Suivi</h2>
+        <dl>
+            <dt>Ouvert le</dt>
+            <dd th:text="${#temporals.format(incident.dateOuverture, 'dd/MM/yyyy HH:mm')}"></dd>
+            <dt th:text="${incident.estResolu()} ? 'Resté ouvert' : 'Ouvert depuis'"></dt>
+            <dd th:text="|${dureeOuverture.toDays()} j ${dureeOuverture.toHoursPart()} h ${dureeOuverture.toMinutesPart()} min|"></dd>
+            <th:block th:if="${incident.estResolu()}">
+                <dt>Résolu le</dt>
+                <dd th:text="${#temporals.format(incident.dateResolution, 'dd/MM/yyyy HH:mm')}"></dd>
+            </th:block>
+            <dt>Prestataire</dt>
+            <dd th:if="${incident.prestataire != null}"
+                th:text="|${incident.prestataire.nom} (${incident.prestataire.contact})|"></dd>
+            <dd th:unless="${incident.prestataire != null}" class="valeur-absente">Aucun prestataire affecté</dd>
+        </dl>
+    </section>
+
+    <section class="carte">
+        <h2>Évaluation du prestataire</h2>
+        <dl th:if="${evaluation != null}">
+            <dt>Note</dt>
+            <dd th:text="|${evaluation.note} / 5|"></dd>
+            <dt>Commentaire</dt>
+            <dd th:text="${evaluation.commentaire} ?: 'Aucun commentaire'"></dd>
+            <dt>Évalué le</dt>
+            <dd th:text="${#temporals.format(evaluation.dateEvaluation, 'dd/MM/yyyy HH:mm')}"></dd>
+        </dl>
+        <p th:unless="${evaluation != null}" class="valeur-absente">Aucune évaluation pour cet incident</p>
+    </section>
+</main>
+</body>
+</html>

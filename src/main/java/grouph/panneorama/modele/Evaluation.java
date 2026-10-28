@@ -2,7 +2,7 @@ package grouph.panneorama.modele;
 
 import jakarta.persistence.*;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "evaluation")
@@ -20,7 +20,11 @@ public class Evaluation {
     private String commentaire;
 
     @Column(name = "date_evaluation", nullable = false)
-    private Instant dateEvaluation;
+    private LocalDateTime dateEvaluation;
+
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "incident_id", nullable = false, unique = true)
+    private Incident incident;
 
     public Integer getId() {
         return id;
@@ -46,12 +50,20 @@ public class Evaluation {
         this.commentaire = commentaire;
     }
 
-    public Instant getDateEvaluation() {
+    public LocalDateTime getDateEvaluation() {
         return dateEvaluation;
     }
 
-    public void setDateEvaluation(Instant dateEvaluation) {
+    public void setDateEvaluation(LocalDateTime dateEvaluation) {
         this.dateEvaluation = dateEvaluation;
+    }
+
+    public Incident getIncident() {
+        return incident;
+    }
+
+    public void setIncident(Incident incident) {
+        this.incident = incident;
     }
 
 }

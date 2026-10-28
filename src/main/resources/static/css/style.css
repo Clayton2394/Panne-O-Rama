@@ -1,0 +1,87 @@
+body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: #f4f5f7;
+    color: #1f2328;
+}
+
+.page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+.carte {
+    background: #fff;
+    border: 1px solid #d8dbe0;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+h2 {
+    margin-top: 0;
+    font-size: 1.1rem;
+}
+
+dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 0;
+}
+
+dt {
+    font-weight: 600;
+}
+
+dd {
+    margin: 0;
+}
+
+.statut {
+    font-size: 0.9rem;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: #e6e8eb;
+    vertical-align: middle;
+}
+
+.valeur-absente {
+    color: #6a737d;
+    font-style: italic;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+textarea {
+    width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+    padding: 8px;
+    border: 1px solid #d8dbe0;
+    border-radius: 6px;
+}
+
+.champ-invalide {
+    border-color: #c62828;
+}
+
+.message-erreur {
+    color: #c62828;
+}
+
+button {
+    margin-top: 12px;
+    padding: 8px 16px;
+    font: inherit;
+    border: none;
+    border-radius: 6px;
+    background: #1f6feb;
+    color: #fff;
+    cursor: pointer;
+}
