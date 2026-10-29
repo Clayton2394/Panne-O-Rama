@@ -1,0 +1,10 @@
+<header th:fragment="bandeau" xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <div sec:authorize="isAuthenticated()" style="text-align:right">
+        Bonjour <span th:text="${#authentication.principal.prenom}"></span>
+        (<span th:text="${#authentication.principal.libelleProfil}"></span>) |
+        <form th:action="@{/deconnexion}" method="post" style="display:inline">
+            <button type="submit" class="lien">Déconnectez-vous</button>
+        </form>
+    </div>
+</header>

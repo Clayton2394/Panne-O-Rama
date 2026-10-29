@@ -16,11 +16,13 @@ public class Equipement {
     @Column(name = "description")
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
-    private String type;
+    private TypeEquipement type;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "etat_fonctionnement", nullable = false, length = 50)
-    private String etatFonctionnement;
+    private EtatEquipement etatFonctionnement;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "station_id", nullable = false)
@@ -50,19 +52,19 @@ public class Equipement {
         this.description = description;
     }
 
-    public String getType() {
+    public TypeEquipement getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(TypeEquipement type) {
         this.type = type;
     }
 
-    public String getEtatFonctionnement() {
+    public EtatEquipement getEtatFonctionnement() {
         return etatFonctionnement;
     }
 
-    public void setEtatFonctionnement(String etatFonctionnement) {
+    public void setEtatFonctionnement(EtatEquipement etatFonctionnement) {
         this.etatFonctionnement = etatFonctionnement;
     }
 
