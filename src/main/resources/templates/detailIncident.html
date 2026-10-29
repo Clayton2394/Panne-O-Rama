@@ -6,6 +6,7 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
 <main class="page">
     <h1>
         Incident n° <span th:text="${incident.id}"></span>
