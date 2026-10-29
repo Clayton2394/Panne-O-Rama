@@ -2,6 +2,9 @@ package grouph.panneorama.modele;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "station")
 public class Station {
@@ -12,6 +15,9 @@ public class Station {
 
     @Column(name = "nom", nullable = false, length = 100)
     private String nom;
+
+    @OneToMany(mappedBy = "station")
+    private List<Equipement> equipements = new ArrayList<>();
 
     public Integer getId() {
         return id;
@@ -29,4 +35,7 @@ public class Station {
         this.nom = nom;
     }
 
+    public List<Equipement> getEquipements() { return equipements; }
+
+    public void setEquipements(List<Equipement> equipements) {this.equipements = equipements;}
 }

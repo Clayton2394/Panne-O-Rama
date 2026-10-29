@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stations</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+
+<main>
+    <h1>Stations</h1>
+
+    <p th:if="${stations.isEmpty()}">Aucune station enregistrée.</p>
+
+    <ul class="liste-stations" th:unless="${stations.isEmpty()}">
+        <li th:each="station : ${stations}">
+            <a th:href="@{/stations/{id}/equipements(id=${station.id})}"
+               th:text="${station.nom}">Nom de la station</a>
+        </li>
+    </ul>
+
+    <p><a th:href="@{/}">← Retour à l'accueil</a></p>
+</main>
+</body>
+</html>

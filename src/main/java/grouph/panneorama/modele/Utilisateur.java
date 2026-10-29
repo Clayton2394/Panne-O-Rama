@@ -19,8 +19,9 @@ public class Utilisateur {
     @Column(name = "prenom", nullable = false, length = 50)
     private String prenom;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "profil", nullable = false, length = 50)
-    private String profil;
+    private Profil profil;
 
     public Integer getId() {
         return id;
@@ -54,11 +55,11 @@ public class Utilisateur {
         this.prenom = prenom;
     }
 
-    public String getProfil() {
+    public Profil getProfil() {
         return profil;
     }
 
-    public void setProfil(String profil) {
+    public void setProfil(Profil profil) {
         this.profil = profil;
     }
 

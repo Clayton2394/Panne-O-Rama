@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Équipements - ' + ${station.nom}">Équipements</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+
+<main>
+    <h1 th:text="'Équipements de la station ' + ${station.nom}">Équipements</h1>
+
+    <p th:if="${equipements.isEmpty()}">Aucun équipement dans cette station.</p>
+
+    <table th:unless="${equipements.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Référence</th>
+            <th>Libellé</th>
+            <th>Type</th>
+            <th>État</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="equipement : ${equipements}">
+            <td th:text="${equipement.reference}">REF</td>
+            <td>
+                <a th:href="@{/equipements/{id}(id=${equipement.id})}"
+                   th:text="${equipement.libelle}">Libellé</a>
+            </td>
+            <td th:text="${equipement.type.libelle}">Type</td>
+            <td>
+            <span th:text="${equipement.etat.libelle}"
+                  th:classappend="${equipement.etat.name() == 'EN_SERVICE'} ? 'etat-ok' : 'etat-panne'"
+                  class="etat">État</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p><a th:href="@{/stations}">← Retour aux stations</a></p>
+</main>
+</body>
+</html>

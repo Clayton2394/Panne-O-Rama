@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head><meta charset="UTF-8"><title>Accueil</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+<h1>Accueil</h1>
+<a th:href="@{/stations}">Consulter les stations</a>
+</body>
+</html>
