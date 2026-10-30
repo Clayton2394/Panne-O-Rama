@@ -1,5 +1,6 @@
 package grouph.panneorama.modele;
 
+import grouph.panneorama.exception.IncidentResoluNonAffectableException;
 import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,6 @@ class IncidentTest {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
         incident.setStatut(StatutIncident.RESOLU);
         incident.setDateResolution(MAINTENANT.minusDays(8));
-
         assertThat(incident.dureeOuverture(HORLOGE_FIGEE)).isEqualTo(Duration.ofDays(2));
     }
 
@@ -58,5 +58,42 @@ class IncidentTest {
         assertThatThrownBy(() -> incident.modifierDescription("Nouvelle description"))
                 .isInstanceOf(IncidentResoluNonModifiableException.class);
         assertThat(incident.getDescription()).isEqualTo("Porte bloquée au quai 1");
+    }
+
+    @Test
+    void affecterPrestataireIncidentNonAffecteLePasseEnAffecte() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        Prestataire prestataire = new Prestataire();
+
+        incident.affecterPrestataire(prestataire);
+
+        assertThat(incident.getPrestataire()).isSameAs(prestataire);
+        assertThat(incident.getStatut()).isEqualTo(StatutIncident.AFFECTE);
+    }
+
+    @Test
+    void reaffecterPrestataireRemplaceLePrestataireActuel() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        Prestataire premierPrestataire = new Prestataire();
+        Prestataire nouveauPrestataire = new Prestataire();
+        incident.affecterPrestataire(premierPrestataire);
+
+        incident.affecterPrestataire(nouveauPrestataire);
+
+        assertThat(incident.getPrestataire()).isSameAs(nouveauPrestataire);
+        assertThat(incident.getStatut()).isEqualTo(StatutIncident.AFFECTE);
+    }
+
+    @Test
+    void affecterPrestataireIncidentResoluEstInterditEtNeChangeRien() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
+        Prestataire prestataireInitial = new Prestataire();
+        incident.affecterPrestataire(prestataireInitial);
+        incident.setStatut(StatutIncident.RESOLU);
+
+        assertThatThrownBy(() -> incident.affecterPrestataire(new Prestataire()))
+                .isInstanceOf(IncidentResoluNonAffectableException.class);
+        assertThat(incident.getPrestataire()).isSameAs(prestataireInitial);
+        assertThat(incident.getStatut()).isEqualTo(StatutIncident.RESOLU);
     }
 }

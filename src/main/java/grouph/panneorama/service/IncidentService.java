@@ -4,6 +4,7 @@ import grouph.panneorama.exception.IncidentIntrouvableException;
 import grouph.panneorama.modele.Equipement;
 import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Incident;
+import grouph.panneorama.modele.Prestataire;
 import grouph.panneorama.repository.EvaluationRepository;
 import grouph.panneorama.repository.IncidentRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,15 +22,18 @@ public class IncidentService {
     private final IncidentRepository incidentRepository;
     private final EvaluationRepository evaluationRepository;
     private final EquipementService equipementService;
+    private final PrestataireService prestataireService;
     private final Clock horloge;
 
     public IncidentService(IncidentRepository incidentRepository,
                            EvaluationRepository evaluationRepository,
                            EquipementService equipementService,
+                           PrestataireService prestataireService,
                            Clock horloge) {
         this.incidentRepository = incidentRepository;
         this.evaluationRepository = evaluationRepository;
         this.equipementService = equipementService;
+        this.prestataireService = prestataireService;
         this.horloge = horloge;
     }
 
@@ -56,6 +60,22 @@ public class IncidentService {
     public Incident modifierDescription(Integer incidentId, String nouvelleDescription) {
         Incident incident = trouverIncident(incidentId);
         incident.modifierDescription(nouvelleDescription);
+        return incident;
+    }
+
+    @PreAuthorize("hasRole('RESPONSABLE')")
+    public Incident trouverIncidentAffectable(Integer incidentId) {
+        Incident incident = trouverIncident(incidentId);
+        incident.verifierAffectable();
+        return incident;
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('RESPONSABLE')")
+    public Incident affecterPrestataire(Integer incidentId, Integer prestataireId) {
+        Incident incident = trouverIncident(incidentId);
+        Prestataire prestataire = prestataireService.trouverPrestataire(prestataireId);
+        incident.affecterPrestataire(prestataire);
         return incident;
     }
 
