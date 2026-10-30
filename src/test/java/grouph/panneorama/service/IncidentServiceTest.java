@@ -2,6 +2,7 @@ package grouph.panneorama.service;
 
 import grouph.panneorama.exception.EquipementIntrouvableException;
 import grouph.panneorama.exception.IncidentIntrouvableException;
+import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import grouph.panneorama.modele.Equipement;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.modele.StatutIncident;
@@ -70,5 +71,25 @@ class IncidentServiceTest {
         assertThatThrownBy(() -> incidentService.trouverIncident(42))
                 .isInstanceOf(IncidentIntrouvableException.class)
                 .hasMessage("L'incident 42 n'existe pas");
+    }
+
+    @Test
+    void modifierDescriptionMetAJourLIncidentExistant() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        Incident incidentModifie = incidentService.modifierDescription(1, "Porte bloquée au quai 1, côté gauche");
+
+        assertThat(incidentModifie.getDescription()).isEqualTo("Porte bloquée au quai 1, côté gauche");
+    }
+
+    @Test
+    void trouverIncidentModifiableResoluLeveIncidentResoluNonModifiable() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
+        incident.setStatut(StatutIncident.RESOLU);
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(5)).thenReturn(Optional.of(incident));
+
+        assertThatThrownBy(() -> incidentService.trouverIncidentModifiable(5))
+                .isInstanceOf(IncidentResoluNonModifiableException.class);
     }
 }

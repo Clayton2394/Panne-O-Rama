@@ -1,5 +1,6 @@
 package grouph.panneorama.controleur;
 
+import grouph.panneorama.exception.OperationInterditeException;
 import grouph.panneorama.exception.RessourceIntrouvableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,14 @@ public class GestionnaireErreurs {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String traiterRessourceIntrouvable(RessourceIntrouvableException exception, Model model) {
         log.warn("Ressource introuvable : {}", exception.getMessage());
+        model.addAttribute("messageErreur", exception.getMessage());
+        return "erreur";
+    }
+
+    @ExceptionHandler(OperationInterditeException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String traiterOperationInterdite(OperationInterditeException exception, Model model) {
+        log.warn("Opération interdite : {}", exception.getMessage());
         model.addAttribute("messageErreur", exception.getMessage());
         return "erreur";
     }
