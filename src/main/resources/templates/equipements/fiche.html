@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="'Équipement ' + ${equipement.reference}">Équipement</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+
+<main>
+    <h1 th:text="${equipement.description}">Équipement</h1>
+
+    <dl class="fiche">
+        <dt>Référence</dt>
+        <dd th:text="${equipement.reference}">REF</dd>
+        <dt>Type</dt>
+        <dd th:text="${equipement.type}">Type</dd>
+        <dt>Station</dt>
+        <dd>
+            <a th:href="@{/stations/{id}/equipements(id=${equipement.station.id})}"
+               th:text="${equipement.station.nom}">Station</a>
+        </dd>
+        <dt>État</dt>
+        <dd>
+        <span th:text="${equipement.etatFonctionnement}"
+              th:classappend="${equipement.getEtatFonctionnement() == 'FONCTIONNEL'} ? 'etat-ok' : 'etat-panne'"
+              class="etat">État</span>
+        </dd>
+    </dl>
+
+    <h2>Incidents</h2>
+
+    <p th:if="${incidents.isEmpty()}">Aucun incident pour cet équipement.</p>
+
+    <table th:unless="${incidents.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Ouvert le</th>
+            <th>Description</th>
+            <th>Statut</th>
+            <th>Résolu le</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="incident : ${incidents}">
+            <td th:text="${#temporals.format(incident.dateOuverture, 'dd/MM/yyyy HH:mm')}">Date</td>
+            <td>
+                <a th:href="@{/incidents/{id}(id=${incident.id})}"
+                   th:text="${incident.description}">Description</a>
+            </td>
+            <td th:text="${incident.statut}">Statut</td>
+            <td th:text="${incident.dateResolution != null}
+                       ? ${#temporals.format(incident.dateResolution, 'dd/MM/yyyy HH:mm')}
+                       : '—'">—</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p><a th:href="@{/stations/{id}/equipements(id=${equipement.station.id})}">← Retour aux équipements de la station</a></p>
+</main>
+</body>
+</html>

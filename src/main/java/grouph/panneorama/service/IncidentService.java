@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -47,5 +48,9 @@ public class IncidentService {
 
     public Duration calculerDureeOuverture(Incident incident) {
         return incident.dureeOuverture(horloge);
+    }
+
+    public List<Incident> listerParEquipement(Integer equipementId) {
+        return incidentRepository.findByEquipementIdOrderByDateOuvertureDesc(equipementId);
     }
 }
