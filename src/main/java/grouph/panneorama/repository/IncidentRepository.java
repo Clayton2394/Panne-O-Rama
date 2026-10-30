@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface IncidentRepository extends JpaRepository<Incident, Integer> {
@@ -18,4 +19,5 @@ public interface IncidentRepository extends JpaRepository<Incident, Integer> {
             WHERE i.id = :incidentId
             """)
     Optional<Incident> trouverAvecEquipementEtPrestataire(@Param("incidentId") Integer incidentId);
+    List<Incident> findByEquipementIdOrderByDateOuvertureDesc(Integer equipementId);
 }

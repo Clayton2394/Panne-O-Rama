@@ -28,12 +28,12 @@
             <td th:text="${equipement.reference}">REF</td>
             <td>
                 <a th:href="@{/equipements/{id}(id=${equipement.id})}"
-                   th:text="${equipement.libelle}">Libellé</a>
+                   th:text="${equipement.description}">Libellé</a>
             </td>
-            <td th:text="${equipement.type.libelle}">Type</td>
+            <td th:text="${equipement.type}">Type</td>
             <td>
-            <span th:text="${equipement.etat.libelle}"
-                  th:classappend="${equipement.etat.name() == 'EN_SERVICE'} ? 'etat-ok' : 'etat-panne'"
+            <span th:text="${equipement.etatFonctionnement}"
+                  th:classappend="${equipement.getEtatFonctionnement() == 'FONCTIONNEL'} ? 'etat-ok' : 'etat-panne'"
                   class="etat">État</span>
             </td>
         </tr>
