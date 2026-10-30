@@ -52,4 +52,10 @@ public class IncidentControleur {
                 .ifPresent(evaluation -> model.addAttribute("evaluation", evaluation));
         return "detailIncident";
     }
+
+    @GetMapping("/incidents/historique")
+    public String afficherHistorique(Model model) {
+        model.addAttribute("incidents", incidentService.listerHistoriqueResolus());
+        return "historiqueIncidents";
+    }
 }
