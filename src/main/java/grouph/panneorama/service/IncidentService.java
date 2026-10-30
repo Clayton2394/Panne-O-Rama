@@ -6,7 +6,9 @@ import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.repository.EvaluationRepository;
 import grouph.panneorama.repository.IncidentRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -39,6 +41,21 @@ public class IncidentService {
     public Incident trouverIncident(Integer incidentId) {
         return incidentRepository.trouverAvecEquipementEtPrestataire(incidentId)
                 .orElseThrow(() -> new IncidentIntrouvableException(incidentId));
+    }
+
+    @PreAuthorize("hasRole('RESPONSABLE')")
+    public Incident trouverIncidentModifiable(Integer incidentId) {
+        Incident incident = trouverIncident(incidentId);
+        incident.verifierModifiable();
+        return incident;
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('RESPONSABLE')")
+    public Incident modifierDescription(Integer incidentId, String nouvelleDescription) {
+        Incident incident = trouverIncident(incidentId);
+        incident.modifierDescription(nouvelleDescription);
+        return incident;
     }
 
     public Optional<Evaluation> trouverEvaluation(Integer incidentId) {

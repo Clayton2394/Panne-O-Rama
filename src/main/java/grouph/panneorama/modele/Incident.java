@@ -1,5 +1,6 @@
 package grouph.panneorama.modele;
 
+import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import jakarta.persistence.*;
 
 import java.time.Clock;
@@ -49,6 +50,18 @@ public class Incident {
 
     public boolean estResolu() {
         return statut == StatutIncident.RESOLU;
+    }
+
+    // F6 : seule la description reste modifiable tant que l'incident n'est pas résolu.
+    public void verifierModifiable() {
+        if (estResolu()) {
+            throw new IncidentResoluNonModifiableException(id);
+        }
+    }
+
+    public void modifierDescription(String nouvelleDescription) {
+        verifierModifiable();
+        this.description = nouvelleDescription;
     }
 
     public Duration dureeOuverture(Clock horloge) {
