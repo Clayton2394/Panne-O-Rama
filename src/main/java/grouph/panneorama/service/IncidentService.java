@@ -70,4 +70,8 @@ public class IncidentService {
     public List<Incident> listerParEquipement(Integer equipementId) {
         return incidentRepository.findByEquipementIdOrderByDateOuvertureDesc(equipementId);
     }
+
+    public List<Incident> listerHistoriqueResolus() {
+        return incidentRepository.findHistoriqueResolus();
+    }
 }

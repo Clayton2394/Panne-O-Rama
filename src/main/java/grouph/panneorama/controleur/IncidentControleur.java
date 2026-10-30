@@ -76,4 +76,10 @@ public class IncidentControleur {
         incidentService.modifierDescription(incidentId, formulaire.getDescription());
         return "redirect:/incidents/" + incidentId;
     }
+
+    @GetMapping("/incidents/historique")
+    public String afficherHistorique(Model model) {
+        model.addAttribute("incidents", incidentService.listerHistoriqueResolus());
+        return "historiqueIncidents";
+    }
 }
