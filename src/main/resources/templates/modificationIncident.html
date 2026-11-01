@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier l'incident</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+<main class="page">
+    <h1>Modifier l'incident n° <span th:text="${incident.id}"></span></h1>
+
+    <section class="carte">
+        <h2>Équipement concerné</h2>
+        <dl>
+            <dt>Station</dt>
+            <dd th:text="${incident.equipement.station.nom}"></dd>
+            <dt>Équipement</dt>
+            <dd th:text="|${incident.equipement.reference} – ${incident.equipement.description}|"></dd>
+        </dl>
+    </section>
+
+    <form class="carte" th:action="@{/incidents/{id}(id=${incident.id})}" th:method="patch"
+          th:object="${formulaire}">
+        <label for="description">Description de la panne</label>
+        <textarea id="description" th:field="*{description}" rows="5"
+                  th:classappend="${#fields.hasErrors('description')} ? 'champ-invalide'"></textarea>
+        <p class="message-erreur" th:each="erreur : ${#fields.errors('description')}" th:text="${erreur}"></p>
+
+        <button type="submit">Enregistrer</button>
+    </form>
+
+    <p><a th:href="@{/incidents/{id}(id=${incident.id})}">← Retour au détail de l'incident</a></p>
+</main>
+</body>
+</html>

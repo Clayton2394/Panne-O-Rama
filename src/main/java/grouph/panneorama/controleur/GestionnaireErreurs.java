@@ -1,5 +1,6 @@
 package grouph.panneorama.controleur;
 
+import grouph.panneorama.exception.OperationInterditeException;
 import grouph.panneorama.exception.RessourceIntrouvableException;
 import grouph.panneorama.exception.TransitionIncidentInterditeException;
 import org.slf4j.Logger;
@@ -26,6 +27,14 @@ public class GestionnaireErreurs {
     @ResponseStatus(HttpStatus.CONFLICT)
     public String traiterTransitionInterdite(TransitionIncidentInterditeException exception, Model model) {
         log.warn("Transition d'incident interdite : {}", exception.getMessage());
+        model.addAttribute("messageErreur", exception.getMessage());
+        return "erreur";
+    }
+
+    @ExceptionHandler(OperationInterditeException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String traiterOperationInterdite(OperationInterditeException exception, Model model) {
+        log.warn("Opération interdite : {}", exception.getMessage());
         model.addAttribute("messageErreur", exception.getMessage());
         return "erreur";
     }

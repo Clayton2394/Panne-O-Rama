@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Détail de l'incident</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
 <main class="page">
     <h1>
         Incident n° <span th:text="${incident.id}"></span>
@@ -15,6 +17,8 @@
     <section class="carte">
         <h2>Description</h2>
         <p th:text="${incident.description}"></p>
+        <a th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
+           th:href="@{/incidents/{id}/modification(id=${incident.id})}">Modifier la description</a>
     </section>
 
     <section class="carte">

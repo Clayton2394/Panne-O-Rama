@@ -1,6 +1,7 @@
 package grouph.panneorama.modele;
 
 import grouph.panneorama.exception.TransitionIncidentInterditeException;
+import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -89,5 +90,23 @@ class IncidentTest {
 
         assertThat(incident.getStatut()).isEqualTo(StatutIncident.NON_AFFECTE);
         assertThat(incident.getDateResolution()).isNull();
+    }
+
+    void modifierDescriptionIncidentNonResoluRemplaceLaDescription() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+
+        incident.modifierDescription("Porte bloquée au quai 1, côté gauche");
+
+        assertThat(incident.getDescription()).isEqualTo("Porte bloquée au quai 1, côté gauche");
+    }
+
+    @Test
+    void modifierDescriptionIncidentResoluEstInterditEtNeChangeRien() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
+        incident.setStatut(StatutIncident.RESOLU);
+
+        assertThatThrownBy(() -> incident.modifierDescription("Nouvelle description"))
+                .isInstanceOf(IncidentResoluNonModifiableException.class);
+        assertThat(incident.getDescription()).isEqualTo("Porte bloquée au quai 1");
     }
 }
