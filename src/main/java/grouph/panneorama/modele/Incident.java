@@ -126,16 +126,8 @@ public class Incident {
         return statut;
     }
 
-    public void setStatut(StatutIncident statut) {
-        this.statut = statut;
-    }
-
     public LocalDateTime getDateResolution() {
         return dateResolution;
-    }
-
-    public void setDateResolution(LocalDateTime dateResolution) {
-        this.dateResolution = dateResolution;
     }
 
     public Equipement getEquipement() {
@@ -148,10 +140,6 @@ public class Incident {
 
     public Prestataire getPrestataire() {
         return prestataire;
-    }
-
-    public void setPrestataire(Prestataire prestataire) {
-        this.prestataire = prestataire;
     }
 
 }

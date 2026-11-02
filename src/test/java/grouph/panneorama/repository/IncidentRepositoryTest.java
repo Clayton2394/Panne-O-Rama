@@ -43,8 +43,7 @@ class IncidentRepositoryTest {
 
     private void enregistrerResolu(Equipement equipement, String description, LocalDateTime resolution) {
         Incident incident = new Incident(equipement, description, resolution.minusDays(1));
-        incident.setStatut(StatutIncident.RESOLU);
-        incident.setDateResolution(resolution);
+        incident.resoudre(resolution);
         incidentRepository.save(incident);
     }
 

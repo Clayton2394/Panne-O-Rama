@@ -5,6 +5,7 @@ import grouph.panneorama.exception.IncidentIntrouvableException;
 import grouph.panneorama.exception.IncidentResoluNonAffectableException;
 import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import grouph.panneorama.exception.PrestataireIntrouvableException;
+import grouph.panneorama.exception.TransitionIncidentInterditeException;
 import grouph.panneorama.modele.Equipement;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.modele.Prestataire;
@@ -91,7 +92,7 @@ class IncidentServiceTest {
     @Test
     void trouverIncidentModifiableResoluLeveIncidentResoluNonModifiable() {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
-        incident.setStatut(StatutIncident.RESOLU);
+        incident.resoudre(MAINTENANT);
         when(incidentRepository.trouverAvecEquipementEtPrestataire(5)).thenReturn(Optional.of(incident));
 
         assertThatThrownBy(() -> incidentService.trouverIncidentModifiable(5))
@@ -126,10 +127,41 @@ class IncidentServiceTest {
     @Test
     void trouverIncidentAffectableResoluLeveIncidentResoluNonAffectable() {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
-        incident.setStatut(StatutIncident.RESOLU);
+        incident.resoudre(MAINTENANT);
         when(incidentRepository.trouverAvecEquipementEtPrestataire(5)).thenReturn(Optional.of(incident));
 
         assertThatThrownBy(() -> incidentService.trouverIncidentAffectable(5))
                 .isInstanceOf(IncidentResoluNonAffectableException.class);
+    }
+
+    @Test
+    void resoudreIncidentLePasseAResoluAvecLaDateCourante() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(2));
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        Incident incidentResolu = incidentService.resoudreIncident(1);
+
+        assertThat(incidentResolu.getStatut()).isEqualTo(StatutIncident.RESOLU);
+        assertThat(incidentResolu.getDateResolution()).isEqualTo(MAINTENANT);
+    }
+
+    @Test
+    void resoudreIncidentDejaResoluLeveTransitionInterditeEtGardeLaDateInitiale() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
+        LocalDateTime dateResolutionInitiale = MAINTENANT.minusDays(8);
+        incident.resoudre(dateResolutionInitiale);
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(5)).thenReturn(Optional.of(incident));
+
+        assertThatThrownBy(() -> incidentService.resoudreIncident(5))
+                .isInstanceOf(TransitionIncidentInterditeException.class);
+        assertThat(incident.getDateResolution()).isEqualTo(dateResolutionInitiale);
+    }
+
+    @Test
+    void resoudreIncidentInexistantLeveIncidentIntrouvable() {
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(42)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> incidentService.resoudreIncident(42))
+                .isInstanceOf(IncidentIntrouvableException.class);
     }
 }
