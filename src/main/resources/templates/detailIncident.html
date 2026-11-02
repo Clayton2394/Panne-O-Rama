@@ -52,6 +52,10 @@
         <a th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
            th:href="@{/incidents/{id}/affectation(id=${incident.id})}"
            th:text="${incident.prestataire == null} ? 'Affecter un prestataire' : 'Réaffecter à un autre prestataire'"></a>
+        <form th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
+              th:action="@{/incidents/{id}/resolution(id=${incident.id})}" th:method="patch">
+            <button type="submit">Déclarer l'incident résolu</button>
+        </form>
     </section>
 
     <section class="carte">

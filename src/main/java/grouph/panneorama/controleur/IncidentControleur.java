@@ -110,6 +110,12 @@ public class IncidentControleur {
         return "redirect:/incidents/" + incidentId;
     }
 
+    @PatchMapping("/incidents/{incidentId}/resolution")
+    public String resoudreIncident(@PathVariable Integer incidentId) {
+        incidentService.resoudreIncident(incidentId);
+        return "redirect:/incidents/" + incidentId;
+    }
+
     @GetMapping("/incidents/historique")
     public String afficherHistorique(Model model) {
         model.addAttribute("incidents", incidentService.listerHistoriqueResolus());

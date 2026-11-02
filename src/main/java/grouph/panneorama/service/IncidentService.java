@@ -103,6 +103,7 @@ public class IncidentService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('RESPONSABLE')")
     public Incident resoudreIncident(Integer incidentId) {
         Incident incident = trouverIncident(incidentId);
         incident.resoudre(LocalDateTime.now(horloge));

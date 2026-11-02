@@ -37,8 +37,8 @@ class IncidentTest {
     @Test
     void dureeOuvertureIncidentResoluSArreteALaResolution() {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
-        incident.setStatut(StatutIncident.RESOLU);
-        incident.setDateResolution(MAINTENANT.minusDays(8));
+        incident.resoudre(MAINTENANT.minusDays(8));
+
         assertThat(incident.dureeOuverture(HORLOGE_FIGEE)).isEqualTo(Duration.ofDays(2));
     }
 
@@ -92,6 +92,7 @@ class IncidentTest {
         assertThat(incident.getDateResolution()).isNull();
     }
 
+    @Test
     void modifierDescriptionIncidentNonResoluRemplaceLaDescription() {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
 
@@ -103,7 +104,7 @@ class IncidentTest {
     @Test
     void modifierDescriptionIncidentResoluEstInterditEtNeChangeRien() {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
-        incident.setStatut(StatutIncident.RESOLU);
+        incident.resoudre(MAINTENANT);
 
         assertThatThrownBy(() -> incident.modifierDescription("Nouvelle description"))
                 .isInstanceOf(IncidentResoluNonModifiableException.class);
@@ -139,7 +140,7 @@ class IncidentTest {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
         Prestataire prestataireInitial = new Prestataire();
         incident.affecterPrestataire(prestataireInitial);
-        incident.setStatut(StatutIncident.RESOLU);
+        incident.resoudre(MAINTENANT);
 
         assertThatThrownBy(() -> incident.affecterPrestataire(new Prestataire()))
                 .isInstanceOf(IncidentResoluNonAffectableException.class);
