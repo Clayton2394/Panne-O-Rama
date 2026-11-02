@@ -58,7 +58,8 @@ label {
     margin-bottom: 6px;
 }
 
-textarea {
+textarea,
+select {
     width: 100%;
     box-sizing: border-box;
     font: inherit;

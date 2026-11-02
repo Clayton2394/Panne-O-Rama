@@ -1,9 +1,11 @@
 package grouph.panneorama.controleur;
 
+import grouph.panneorama.formulaire.AffectationPrestataireFormulaire;
 import grouph.panneorama.formulaire.DescriptionIncidentFormulaire;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.service.EquipementService;
 import grouph.panneorama.service.IncidentService;
+import grouph.panneorama.service.PrestataireService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,10 +20,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 public class IncidentControleur {
     private final IncidentService incidentService;
     private final EquipementService equipementService;
+    private final PrestataireService prestataireService;
 
-    public IncidentControleur(IncidentService incidentService, EquipementService equipementService) {
+    public IncidentControleur(IncidentService incidentService,
+                              EquipementService equipementService,
+                              PrestataireService prestataireService) {
         this.incidentService = incidentService;
         this.equipementService = equipementService;
+        this.prestataireService = prestataireService;
     }
 
     @GetMapping("/equipements/{equipementId}/incidents/nouveau")
@@ -74,6 +80,33 @@ public class IncidentControleur {
             return "modificationIncident";
         }
         incidentService.modifierDescription(incidentId, formulaire.getDescription());
+        return "redirect:/incidents/" + incidentId;
+    }
+
+    @GetMapping("/incidents/{incidentId}/affectation")
+    public String afficherFormulaireAffectation(@PathVariable Integer incidentId, Model model) {
+        Incident incident = incidentService.trouverIncidentAffectable(incidentId);
+        AffectationPrestataireFormulaire formulaire = new AffectationPrestataireFormulaire();
+        if (incident.getPrestataire() != null) {
+            formulaire.setPrestataireId(incident.getPrestataire().getId());
+        }
+        model.addAttribute("incident", incident);
+        model.addAttribute("prestataires", prestataireService.listerPrestataires());
+        model.addAttribute("formulaire", formulaire);
+        return "affectationIncident";
+    }
+
+    @PatchMapping("/incidents/{incidentId}/prestataire")
+    public String affecterPrestataire(@PathVariable Integer incidentId,
+                                      @Valid @ModelAttribute("formulaire") AffectationPrestataireFormulaire formulaire,
+                                      BindingResult resultatValidation,
+                                      Model model) {
+        if (resultatValidation.hasErrors()) {
+            model.addAttribute("incident", incidentService.trouverIncidentAffectable(incidentId));
+            model.addAttribute("prestataires", prestataireService.listerPrestataires());
+            return "affectationIncident";
+        }
+        incidentService.affecterPrestataire(incidentId, formulaire.getPrestataireId());
         return "redirect:/incidents/" + incidentId;
     }
 

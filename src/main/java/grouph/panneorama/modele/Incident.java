@@ -1,7 +1,8 @@
 package grouph.panneorama.modele;
 
-import grouph.panneorama.exception.TransitionIncidentInterditeException;
+import grouph.panneorama.exception.IncidentResoluNonAffectableException;
 import grouph.panneorama.exception.IncidentResoluNonModifiableException;
+import grouph.panneorama.exception.TransitionIncidentInterditeException;
 import jakarta.persistence.*;
 
 import java.time.Clock;
@@ -81,6 +82,20 @@ public class Incident {
     public Duration dureeOuverture(Clock horloge) {
         LocalDateTime finOuverture = estResolu() ? dateResolution : LocalDateTime.now(horloge);
         return Duration.between(dateOuverture, finOuverture);
+    }
+
+    // RG5 : si résolu, ne peut plus être réaffecté.
+    public void verifierAffectable() {
+        if (estResolu()) {
+            throw new IncidentResoluNonAffectableException(id);
+        }
+    }
+
+    // F7 : affecter et réaffecter reviennent au même, le nouveau prestataire remplace l'éventuel précédent.
+    public void affecterPrestataire(Prestataire nouveauPrestataire) {
+        verifierAffectable();
+        this.prestataire = nouveauPrestataire;
+        this.statut = StatutIncident.AFFECTE;
     }
 
     public Integer getId() {

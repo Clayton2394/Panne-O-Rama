@@ -49,6 +49,9 @@
                 th:text="|${incident.prestataire.nom} (${incident.prestataire.contact})|"></dd>
             <dd th:unless="${incident.prestataire != null}" class="valeur-absente">Aucun prestataire affecté</dd>
         </dl>
+        <a th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
+           th:href="@{/incidents/{id}/affectation(id=${incident.id})}"
+           th:text="${incident.prestataire == null} ? 'Affecter un prestataire' : 'Réaffecter à un autre prestataire'"></a>
     </section>
 
     <section class="carte">
