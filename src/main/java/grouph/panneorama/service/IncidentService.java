@@ -5,6 +5,7 @@ import grouph.panneorama.modele.Equipement;
 import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.modele.Prestataire;
+import grouph.panneorama.modele.StatutIncident;
 import grouph.panneorama.repository.EvaluationRepository;
 import grouph.panneorama.repository.IncidentRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -89,5 +90,22 @@ public class IncidentService {
 
     public List<Incident> listerParEquipement(Integer equipementId) {
         return incidentRepository.findByEquipementIdOrderByDateOuvertureDesc(equipementId);
+    }
+
+    public List<Incident> listerHistoriqueResolus() {
+        return incidentRepository.findHistoriqueResolus();
+    }
+
+    public List<Incident> listerIncidents(StatutIncident statut) {
+        return statut == null
+                ? incidentRepository.findTousAvecDetails()
+                : incidentRepository.findParStatutAvecDetails(statut);
+    }
+
+    @Transactional
+    public Incident resoudreIncident(Integer incidentId) {
+        Incident incident = trouverIncident(incidentId);
+        incident.resoudre(LocalDateTime.now(horloge));
+        return incident;
     }
 }

@@ -109,4 +109,10 @@ public class IncidentControleur {
         incidentService.affecterPrestataire(incidentId, formulaire.getPrestataireId());
         return "redirect:/incidents/" + incidentId;
     }
+
+    @GetMapping("/incidents/historique")
+    public String afficherHistorique(Model model) {
+        model.addAttribute("incidents", incidentService.listerHistoriqueResolus());
+        return "historiqueIncidents";
+    }
 }

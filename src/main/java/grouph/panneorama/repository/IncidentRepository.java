@@ -1,6 +1,7 @@
 package grouph.panneorama.repository;
 
 import grouph.panneorama.modele.Incident;
+import grouph.panneorama.modele.StatutIncident;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +21,33 @@ public interface IncidentRepository extends JpaRepository<Incident, Integer> {
             """)
     Optional<Incident> trouverAvecEquipementEtPrestataire(@Param("incidentId") Integer incidentId);
     List<Incident> findByEquipementIdOrderByDateOuvertureDesc(Integer equipementId);
+
+    @Query("""
+        SELECT i FROM Incident i
+        JOIN FETCH i.equipement e
+        JOIN FETCH e.station
+        LEFT JOIN FETCH i.prestataire
+        WHERE i.statut = grouph.panneorama.modele.StatutIncident.RESOLU
+        ORDER BY i.dateResolution DESC, i.id DESC
+        """)
+    List<Incident> findHistoriqueResolus();
+
+    @Query("""
+        SELECT i FROM Incident i
+        JOIN FETCH i.equipement e
+        JOIN FETCH e.station
+        LEFT JOIN FETCH i.prestataire
+        ORDER BY i.dateOuverture DESC, i.id DESC
+        """)
+    List<Incident> findTousAvecDetails();
+
+    @Query("""
+        SELECT i FROM Incident i
+        JOIN FETCH i.equipement e
+        JOIN FETCH e.station
+        LEFT JOIN FETCH i.prestataire
+        WHERE i.statut = :statut
+        ORDER BY i.dateOuverture DESC, i.id DESC
+        """)
+    List<Incident> findParStatutAvecDetails(@Param("statut") StatutIncident statut);
 }

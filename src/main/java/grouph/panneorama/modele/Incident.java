@@ -2,6 +2,7 @@ package grouph.panneorama.modele;
 
 import grouph.panneorama.exception.IncidentResoluNonAffectableException;
 import grouph.panneorama.exception.IncidentResoluNonModifiableException;
+import grouph.panneorama.exception.TransitionIncidentInterditeException;
 import jakarta.persistence.*;
 
 import java.time.Clock;
@@ -51,6 +52,19 @@ public class Incident {
 
     public boolean estResolu() {
         return statut == StatutIncident.RESOLU;
+    }
+
+    // RG5 : la résolution est postérieure ou égale à l'ouverture, et un incident résolu ne se résout pas deux fois.
+    public void resoudre(LocalDateTime dateResolution) {
+        if (estResolu()) {
+            throw new TransitionIncidentInterditeException("L'incident " + id + " est déjà résolu.");
+        }
+        if (dateResolution.isBefore(dateOuverture)) {
+            throw new TransitionIncidentInterditeException(
+                    "La date de résolution ne peut pas précéder la date d'ouverture de l'incident " + id + ".");
+        }
+        this.dateResolution = dateResolution;
+        this.statut = StatutIncident.RESOLU;
     }
 
     // F6 : seule la description reste modifiable tant que l'incident n'est pas résolu.
