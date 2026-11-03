@@ -85,6 +85,15 @@ public class Incident {
         return Duration.between(dateOuverture, finOuverture);
     }
 
+    // RG3 et RG4 : seul un incident non affecté porte un indicateur de couleur.
+    public NiveauAttention niveauAttention(Clock horloge) {
+        return switch (statut) {
+            case NON_AFFECTE -> NiveauAttention.pourIncidentNonAffecte(dureeOuverture(horloge));
+            case AFFECTE -> NiveauAttention.PRIS_EN_CHARGE;
+            case RESOLU -> throw new IllegalStateException("Un incident résolu n'a pas de niveau d'attention.");
+        };
+    }
+
     // RG5 : si résolu, ne peut plus être réaffecté.
     public void verifierAffectable() {
         if (estResolu()) {
@@ -138,9 +147,13 @@ public class Incident {
         return statut;
     }
 
+    public void setStatut(StatutIncident statut) {this.statut = statut;}
+
     public LocalDateTime getDateResolution() {
         return dateResolution;
     }
+
+    public void setDateResolution(LocalDateTime dateResolution) {this.dateResolution = dateResolution;}
 
     public Equipement getEquipement() {
         return equipement;

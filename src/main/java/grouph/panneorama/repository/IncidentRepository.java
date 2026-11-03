@@ -50,4 +50,14 @@ public interface IncidentRepository extends JpaRepository<Incident, Integer> {
         ORDER BY i.dateOuverture DESC, i.id DESC
         """)
     List<Incident> findParStatutAvecDetails(@Param("statut") StatutIncident statut);
+
+    @Query("""
+        SELECT i FROM Incident i
+        JOIN FETCH i.equipement e
+        JOIN FETCH e.station
+        LEFT JOIN FETCH i.prestataire
+        WHERE i.statut <> grouph.panneorama.modele.StatutIncident.RESOLU
+        ORDER BY i.dateOuverture ASC, i.id ASC
+        """)
+    List<Incident> findActifsAvecDetails();
 }
