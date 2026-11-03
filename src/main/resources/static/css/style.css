@@ -86,3 +86,13 @@ button {
     color: #fff;
     cursor: pointer;
 }
+
+.indicateurs { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1rem 0; }
+.carte { display: flex; flex-direction: column; padding: 0.8rem 1.2rem; border: 1px solid #ddd; border-radius: 8px; min-width: 9rem; }
+.carte strong { font-size: 1.6rem; }
+.filtres { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 1rem 0; }
+.niveau { padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.9rem; font-weight: 600; }
+.niveau-vert { background: #d9f2de; color: #1b6b2f; }
+.niveau-orange { background: #ffe8c2; color: #8a4b00; }
+.niveau-rouge { background: #fbdada; color: #9b1c1c; }
+.niveau-pris-en-charge { background: #dbe8fb; color: #1d4a8f; }
