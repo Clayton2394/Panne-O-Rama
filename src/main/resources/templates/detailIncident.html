@@ -69,6 +69,8 @@
             <dd th:text="${#temporals.format(evaluation.dateEvaluation, 'dd/MM/yyyy HH:mm')}"></dd>
         </dl>
         <p th:unless="${evaluation != null}" class="valeur-absente">Aucune évaluation pour cet incident</p>
+        <a th:if="${evaluation == null and incident.estEvaluable()}" sec:authorize="hasRole('RESPONSABLE')"
+           th:href="@{/incidents/{id}/evaluation(id=${incident.id})}">Évaluer le prestataire</a>
     </section>
 </main>
 </body>
