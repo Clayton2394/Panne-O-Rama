@@ -147,4 +147,50 @@ class IncidentTest {
         assertThat(incident.getPrestataire()).isSameAs(prestataireInitial);
         assertThat(incident.getStatut()).isEqualTo(StatutIncident.RESOLU);
     }
+
+    @Test
+    void incidentNonAffecteOuvertDepuis47HeuresEstVert() {
+        Incident incident = new Incident(new Equipement(), "Panne", MAINTENANT.minusHours(47));
+
+        assertThat(incident.niveauAttention(HORLOGE_FIGEE)).isEqualTo(NiveauAttention.VERT);
+    }
+
+    @Test
+    void incidentNonAffecteOuvertDepuis48HeuresPileEstOrange() {
+        Incident incident = new Incident(new Equipement(), "Panne", MAINTENANT.minusHours(48));
+
+        assertThat(incident.niveauAttention(HORLOGE_FIGEE)).isEqualTo(NiveauAttention.ORANGE);
+    }
+
+    @Test
+    void incidentNonAffecteOuvertDepuis71Heures59EstOrange() {
+        Incident incident = new Incident(new Equipement(), "Panne", MAINTENANT.minusHours(72).plusMinutes(1));
+
+        assertThat(incident.niveauAttention(HORLOGE_FIGEE)).isEqualTo(NiveauAttention.ORANGE);
+    }
+
+    @Test
+    void incidentNonAffecteOuvertDepuis72HeuresPileEstRouge() {
+        Incident incident = new Incident(new Equipement(), "Panne", MAINTENANT.minusHours(72));
+
+        assertThat(incident.niveauAttention(HORLOGE_FIGEE)).isEqualTo(NiveauAttention.ROUGE);
+    }
+
+    @Test
+    void incidentAffecteEstPrisEnChargeMemeOuvertDepuisTresLongtemps() {
+        Incident incident = new Incident(new Equipement(), "Panne", MAINTENANT.minusHours(100));
+        incident.setStatut(StatutIncident.AFFECTE);
+
+        assertThat(incident.niveauAttention(HORLOGE_FIGEE)).isEqualTo(NiveauAttention.PRIS_EN_CHARGE);
+    }
+
+    @Test
+    void incidentResoluNAPasDeNiveauDAttention() {
+        Incident incident = new Incident(new Equipement(), "Panne", MAINTENANT.minusHours(10));
+        incident.setStatut(StatutIncident.RESOLU);
+        incident.setDateResolution(MAINTENANT);
+
+        assertThatThrownBy(() -> incident.niveauAttention(HORLOGE_FIGEE))
+                .isInstanceOf(IllegalStateException.class);
+    }
 }

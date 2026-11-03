@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @ControllerAdvice
 public class GestionnaireErreurs {
@@ -27,6 +28,14 @@ public class GestionnaireErreurs {
     public String traiterOperationInterdite(OperationInterditeException exception, Model model) {
         log.warn("Opération interdite : {}", exception.getMessage());
         model.addAttribute("messageErreur", exception.getMessage());
+        return "erreur";
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String traiterParametreInvalide(MethodArgumentTypeMismatchException exception, Model model) {
+        model.addAttribute("messageErreur",
+                "La valeur demandée pour le filtre '" + exception.getName() + "' est invalide.");
         return "erreur";
     }
 }

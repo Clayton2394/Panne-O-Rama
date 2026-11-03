@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="fr">
 <head><meta charset="UTF-8"><title>Accueil</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
@@ -7,5 +7,8 @@
 <div th:replace="~{fragments/bandeau :: bandeau}"></div>
 <h1>Accueil</h1>
 <a th:href="@{/stations}">Consulter les stations</a>
+<p sec:authorize="hasRole('RESPONSABLE')">
+    <a th:href="@{/tableau-de-bord}">Tableau de bord des incidents actifs</a>
+</p>
 </body>
 </html>
