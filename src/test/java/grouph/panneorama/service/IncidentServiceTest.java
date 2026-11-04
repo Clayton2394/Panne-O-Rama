@@ -1,12 +1,16 @@
 package grouph.panneorama.service;
 
 import grouph.panneorama.exception.EquipementIntrouvableException;
+import grouph.panneorama.exception.IncidentDejaEvalueException;
 import grouph.panneorama.exception.IncidentIntrouvableException;
+import grouph.panneorama.exception.IncidentNonEvaluableException;
 import grouph.panneorama.exception.IncidentResoluNonAffectableException;
 import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import grouph.panneorama.exception.PrestataireIntrouvableException;
 import grouph.panneorama.exception.TransitionIncidentInterditeException;
 import grouph.panneorama.modele.Equipement;
+import org.springframework.context.ApplicationEventPublisher;
+import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.modele.Prestataire;
 import grouph.panneorama.modele.StatutIncident;
@@ -27,25 +31,35 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import grouph.panneorama.evenement.ChangementIncident;
+import grouph.panneorama.modele.TypeEvenementIncident;
+import org.mockito.ArgumentCaptor;
+
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class IncidentServiceTest {
     private static final ZoneId FUSEAU = ZoneId.of("Europe/Paris");
     private static final LocalDateTime MAINTENANT = LocalDateTime.of(2026, 10, 28, 12, 0);
 
     private IncidentRepository incidentRepository;
+    private EvaluationRepository evaluationRepository;
     private EquipementService equipementService;
     private PrestataireService prestataireService;
     private IncidentService incidentService;
+    private ApplicationEventPublisher evenements;
 
     @BeforeEach
     void initialiser() {
         incidentRepository = mock(IncidentRepository.class);
+        evaluationRepository = mock(EvaluationRepository.class);
         equipementService = mock(EquipementService.class);
         prestataireService = mock(PrestataireService.class);
+        evenements = mock(ApplicationEventPublisher.class);
         Clock horlogeFigee = Clock.fixed(MAINTENANT.atZone(FUSEAU).toInstant(), FUSEAU);
-        incidentService = new IncidentService(incidentRepository, mock(EvaluationRepository.class),
-                equipementService, prestataireService, horlogeFigee);
+        incidentService = new IncidentService(incidentRepository, evaluationRepository,
+                equipementService, prestataireService, horlogeFigee, evenements);
         when(incidentRepository.save(any(Incident.class))).thenAnswer(appel -> appel.getArgument(0));
+        when(evaluationRepository.save(any(Evaluation.class))).thenAnswer(appel -> appel.getArgument(0));
     }
 
     @Test
@@ -163,5 +177,159 @@ class IncidentServiceTest {
 
         assertThatThrownBy(() -> incidentService.resoudreIncident(42))
                 .isInstanceOf(IncidentIntrouvableException.class);
+    }
+
+    @Test
+    void declarerIncidentPublieUnEvenementDeDeclaration() {
+        Equipement equipement = new Equipement();
+        equipement.setReference("ASC-001");
+        when(equipementService.trouverEquipement(1)).thenReturn(equipement);
+
+        incidentService.declarerIncident(1, "Porte bloquée au quai 1");
+
+        ChangementIncident changement = evenementPublie();
+        assertThat(changement.type()).isEqualTo(TypeEvenementIncident.DECLARATION);
+        assertThat(changement.detail()).contains("ASC-001");
+    }
+
+    @Test
+    void declarerIncidentSurEquipementInexistantNePublieAucunEvenement() {
+        when(equipementService.trouverEquipement(99)).thenThrow(new EquipementIntrouvableException(99));
+
+        assertThatThrownBy(() -> incidentService.declarerIncident(99, "Porte bloquée au quai 1"))
+                .isInstanceOf(EquipementIntrouvableException.class);
+
+        verifyNoInteractions(evenements);
+    }
+
+    @Test
+    void resoudreIncidentPublieUnEvenementDeResolution() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(2));
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        incidentService.resoudreIncident(1);
+
+        ChangementIncident changement = evenementPublie();
+        assertThat(changement.type()).isEqualTo(TypeEvenementIncident.RESOLUTION);
+        assertThat(changement.incident()).isSameAs(incident);
+    }
+
+    @Test
+    void resoudreIncidentDejaResoluNePublieAucunEvenement() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
+        incident.resoudre(MAINTENANT.minusDays(8));
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(5)).thenReturn(Optional.of(incident));
+
+        assertThatThrownBy(() -> incidentService.resoudreIncident(5))
+                .isInstanceOf(TransitionIncidentInterditeException.class);
+
+        verifyNoInteractions(evenements);
+    }
+
+    @Test
+    void affecterPrestataireAUnIncidentNonAffectePublieUneAffectation() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+        when(prestataireService.trouverPrestataire(2)).thenReturn(new Prestataire());
+
+        incidentService.affecterPrestataire(1, 2);
+
+        assertThat(evenementPublie().type()).isEqualTo(TypeEvenementIncident.AFFECTATION);
+    }
+
+    @Test
+    void affecterPrestataireAUnIncidentDejaAffectePublieUneReaffectation() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        incident.affecterPrestataire(new Prestataire());
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+        when(prestataireService.trouverPrestataire(2)).thenReturn(new Prestataire());
+
+        incidentService.affecterPrestataire(1, 2);
+
+        assertThat(evenementPublie().type()).isEqualTo(TypeEvenementIncident.REAFFECTATION);
+    }
+
+    @Test
+    void modifierDescriptionPublieUnEvenementDeModification() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        incidentService.modifierDescription(1, "Porte bloquée au quai 1, côté gauche");
+
+        assertThat(evenementPublie().type()).isEqualTo(TypeEvenementIncident.MODIFICATION);
+    }
+
+    private ChangementIncident evenementPublie() {
+        ArgumentCaptor<ChangementIncident> capteur = ArgumentCaptor.forClass(ChangementIncident.class);
+        verify(evenements).publishEvent(capteur.capture());
+        return capteur.getValue();
+    }
+
+    @Test
+    void evaluerPrestataireEnregistreLEvaluationAvecLaDateCourante() {
+        Incident incident = incidentResoluEtAffecte();
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        Evaluation evaluation = incidentService.evaluerPrestataire(1, 4, "Intervention rapide");
+
+        assertThat(evaluation.getIncident()).isSameAs(incident);
+        assertThat(evaluation.getNote()).isEqualTo(4);
+        assertThat(evaluation.getDateEvaluation()).isEqualTo(MAINTENANT);
+        verify(evaluationRepository).save(evaluation);
+    }
+
+    @Test
+    void evaluerPrestataireDejaEvalueLeveIncidentDejaEvalueEtNEnregistreRien() {
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incidentResoluEtAffecte()));
+        when(evaluationRepository.existsByIncidentId(1)).thenReturn(true);
+
+        assertThatThrownBy(() -> incidentService.evaluerPrestataire(1, 4, null))
+                .isInstanceOf(IncidentDejaEvalueException.class);
+        verify(evaluationRepository, never()).save(any());
+    }
+
+    @Test
+    void evaluerPrestataireIncidentNonResoluLeveIncidentNonEvaluableEtNEnregistreRien() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        incident.affecterPrestataire(new Prestataire());
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        assertThatThrownBy(() -> incidentService.evaluerPrestataire(1, 4, null))
+                .isInstanceOf(IncidentNonEvaluableException.class);
+        verify(evaluationRepository, never()).save(any());
+    }
+
+    @Test
+    void evaluerPrestatairePublieUnEvenementDEvaluation() {
+        Prestataire prestataire = new Prestataire();
+        prestataire.setNom("ElecPro");
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(1));
+        incident.affecterPrestataire(prestataire);
+        incident.resoudre(MAINTENANT.minusHours(1));
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        incidentService.evaluerPrestataire(1, 4, null);
+
+        ChangementIncident changement = evenementPublie();
+        assertThat(changement.type()).isEqualTo(TypeEvenementIncident.EVALUATION);
+        assertThat(changement.detail()).contains("ElecPro", "4 / 5");
+    }
+
+    @Test
+    void evaluerPrestataireDejaEvalueNePublieAucunEvenement() {
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incidentResoluEtAffecte()));
+        when(evaluationRepository.existsByIncidentId(1)).thenReturn(true);
+
+        assertThatThrownBy(() -> incidentService.evaluerPrestataire(1, 4, null))
+                .isInstanceOf(IncidentDejaEvalueException.class);
+
+        verifyNoInteractions(evenements);
+    }
+
+    private Incident incidentResoluEtAffecte() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(1));
+        incident.affecterPrestataire(new Prestataire());
+        incident.resoudre(MAINTENANT.minusHours(1));
+        return incident;
     }
 }

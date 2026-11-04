@@ -1,14 +1,43 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml" lang="fr">
-<head><meta charset="UTF-8"><title>Accueil</title>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Accueil · Panne-o-rama</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
 </head>
 <body>
 <div th:replace="~{fragments/bandeau :: bandeau}"></div>
-<h1>Accueil</h1>
-<a th:href="@{/stations}">Consulter les stations</a>
-<p sec:authorize="hasRole('RESPONSABLE')">
-    <a th:href="@{/tableau-de-bord}">Tableau de bord des incidents actifs</a>
-</p>
+<main class="page">
+    <section class="accueil-intro">
+        <h1>Bonjour <span th:text="${#authentication.principal.prenom}"></span></h1>
+        <p class="sous-titre">Que souhaitez-vous faire ?</p>
+    </section>
+
+    <section class="tuiles">
+        <a class="tuile" th:href="@{/stations}">
+            <span class="tuile-icone" aria-hidden="true">🚉</span>
+            <strong>Stations et équipements</strong>
+            <span>Consulter les équipements d'une station et déclarer un incident.</span>
+        </a>
+        <a class="tuile" th:href="@{/incidents/historique}">
+            <span class="tuile-icone" aria-hidden="true">🗂️</span>
+            <strong>Historique</strong>
+            <span>Retrouver les incidents résolus et les exporter en CSV.</span>
+        </a>
+        <a class="tuile" th:href="@{/tableau-de-bord}" sec:authorize="hasRole('RESPONSABLE')">
+            <span class="tuile-icone" aria-hidden="true">📊</span>
+            <strong>Tableau de bord</strong>
+            <span>Suivre les incidents actifs et leur niveau d'attention.</span>
+        </a>
+        <a class="tuile" th:href="@{/journal}" sec:authorize="hasRole('RESPONSABLE')">
+            <span class="tuile-icone" aria-hidden="true">📝</span>
+            <strong>Journal des incidents</strong>
+            <span>Qui a fait quoi, et quand, sur chaque incident.</span>
+        </a>
+    </section>
+</main>
 </body>
 </html>

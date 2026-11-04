@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="'Équipement ' + ${equipement.reference}">Équipement</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
 </head>
 <body>
 <div th:replace="~{fragments/bandeau :: bandeau}"></div>
 
-<main>
+<main class="page">
     <h1 th:text="${equipement.description}">Équipement</h1>
 
+    <section class="carte">
     <dl class="fiche">
         <dt>Référence</dt>
         <dd th:text="${equipement.reference}">REF</dd>
@@ -24,11 +26,15 @@
         </dd>
         <dt>État</dt>
         <dd>
-        <span th:text="${equipement.etatFonctionnement}"
-              th:classappend="${equipement.getEtatFonctionnement() == 'FONCTIONNEL'} ? 'etat-ok' : 'etat-panne'"
-              class="etat">État</span>
+        <span th:text="${equipement.etatFonctionnement == T(grouph.panneorama.modele.EtatEquipement).FONCTIONNEL} ? 'Fonctionnel' : 'En panne'"
+              th:classappend="${equipement.etatFonctionnement == T(grouph.panneorama.modele.EtatEquipement).FONCTIONNEL} ? 'etat-ok' : 'etat-panne'"
+              class="badge">État</span>
         </dd>
     </dl>
+    <p class="actions">
+        <a class="bouton" th:href="@{/equipements/{id}/incidents/nouveau(id=${equipement.id})}">Déclarer un incident</a>
+    </p>
+    </section>
 
     <h2>Incidents</h2>
 
@@ -50,7 +56,8 @@
                 <a th:href="@{/incidents/{id}(id=${incident.id})}"
                    th:text="${incident.description}">Description</a>
             </td>
-            <td th:text="${incident.statut}">Statut</td>
+            <td><span class="badge" th:classappend="${'statut-' + incident.statut.name().toLowerCase().replace('_', '-')}"
+                      th:text="${incident.statut.libelle}">Statut</span></td>
             <td th:text="${incident.dateResolution != null}
                        ? ${#temporals.format(incident.dateResolution, 'dd/MM/yyyy HH:mm')}
                        : '—'">—</td>

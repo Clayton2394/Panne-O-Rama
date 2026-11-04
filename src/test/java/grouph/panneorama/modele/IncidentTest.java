@@ -1,5 +1,6 @@
 package grouph.panneorama.modele;
 
+import grouph.panneorama.exception.IncidentNonEvaluableException;
 import grouph.panneorama.exception.IncidentResoluNonAffectableException;
 import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import grouph.panneorama.exception.TransitionIncidentInterditeException;
@@ -146,6 +147,33 @@ class IncidentTest {
                 .isInstanceOf(IncidentResoluNonAffectableException.class);
         assertThat(incident.getPrestataire()).isSameAs(prestataireInitial);
         assertThat(incident.getStatut()).isEqualTo(StatutIncident.RESOLU);
+    }
+
+    @Test
+    void incidentResoluAvecPrestataireEstEvaluable() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(1));
+        incident.affecterPrestataire(new Prestataire());
+        incident.resoudre(MAINTENANT);
+
+        assertThat(incident.estEvaluable()).isTrue();
+    }
+
+    @Test
+    void incidentNonResoluNEstPasEvaluable() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        incident.affecterPrestataire(new Prestataire());
+
+        assertThat(incident.estEvaluable()).isFalse();
+        assertThatThrownBy(incident::verifierEvaluable).isInstanceOf(IncidentNonEvaluableException.class);
+    }
+
+    @Test
+    void incidentResoluSansPrestataireNEstPasEvaluable() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(1));
+        incident.resoudre(MAINTENANT);
+
+        assertThat(incident.estEvaluable()).isFalse();
+        assertThatThrownBy(incident::verifierEvaluable).isInstanceOf(IncidentNonEvaluableException.class);
     }
 
     @Test

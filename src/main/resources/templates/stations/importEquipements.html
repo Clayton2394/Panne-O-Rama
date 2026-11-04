@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Importer des équipements</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+
+<main class="page">
+    <h1 th:text="|Importer des équipements dans la station ${station.nom}|">Importer des équipements</h1>
+
+    <section class="carte">
+        <h2>Format attendu</h2>
+        <p>Un fichier CSV encodé en UTF-8, avec <code>;</code> comme séparateur et une ligne d'en-tête :</p>
+        <pre><code>reference;description;type;etat
+ASC-101;Ascenseur quai 2;ASCENSEUR;FONCTIONNEL
+ECR-102;Écran hall nord;ECRAN_INFORMATION;</code></pre>
+        <ul>
+            <li><code>reference</code> et <code>type</code> sont obligatoires, la référence doit être unique.</li>
+            <li><code>type</code> : ASCENSEUR, ESCALATOR, PORTIQUE, DISTRIBUTEUR ou ECRAN_INFORMATION.</li>
+            <li><code>etat</code> : FONCTIONNEL ou EN_PANNE (FONCTIONNEL si vide).</li>
+            <li>Si une seule ligne est invalide, aucun équipement n'est importé.</li>
+        </ul>
+    </section>
+
+    <section class="carte" th:if="${erreurs != null}">
+        <h2>Import refusé, aucun équipement n'a été ajouté</h2>
+        <ul>
+            <li class="message-erreur" th:each="erreur : ${erreurs}" th:text="${erreur}"></li>
+        </ul>
+    </section>
+
+    <form class="carte" th:action="@{/stations/{id}/equipements/import(id=${station.id})}" method="post"
+          enctype="multipart/form-data">
+        <label for="fichier">Fichier CSV</label>
+        <input type="file" id="fichier" name="fichier" accept=".csv,text/csv" required>
+
+        <button type="submit">Importer</button>
+    </form>
+
+    <p><a th:href="@{/stations/{id}/equipements(id=${station.id})}">← Retour aux équipements de la station</a></p>
+</main>
+</body>
+</html>

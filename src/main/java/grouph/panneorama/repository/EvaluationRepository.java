@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface EvaluationRepository extends JpaRepository<Evaluation, Integer> {
 
     Optional<Evaluation> findByIncidentId(Integer incidentId);
+
+    boolean existsByIncidentId(Integer incidentId);
 }

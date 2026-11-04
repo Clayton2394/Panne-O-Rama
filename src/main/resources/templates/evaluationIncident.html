@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Évaluer le prestataire</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+<main class="page">
+    <h1>Évaluer le prestataire de l'incident n° <span th:text="${incident.id}"></span></h1>
+
+    <section class="carte">
+        <h2>Incident concerné</h2>
+        <dl>
+            <dt>Station</dt>
+            <dd th:text="${incident.equipement.station.nom}"></dd>
+            <dt>Équipement</dt>
+            <dd th:text="|${incident.equipement.reference} – ${incident.equipement.description}|"></dd>
+            <dt>Description</dt>
+            <dd th:text="${incident.description}"></dd>
+            <dt>Résolu le</dt>
+            <dd th:text="${#temporals.format(incident.dateResolution, 'dd/MM/yyyy HH:mm')}"></dd>
+            <dt>Prestataire</dt>
+            <dd th:text="|${incident.prestataire.nom} (${incident.prestataire.contact})|"></dd>
+        </dl>
+    </section>
+
+    <form class="carte" th:action="@{/incidents/{id}/evaluation(id=${incident.id})}" method="post"
+          th:object="${formulaire}">
+        <label for="note">Note</label>
+        <select id="note" th:field="*{note}"
+                th:classappend="${#fields.hasErrors('note')} ? 'champ-invalide'">
+            <option value="">-- Choisir une note --</option>
+            <option th:each="notePossible : ${notesPossibles}" th:value="${notePossible}"
+                    th:text="|${notePossible} / 5|"></option>
+        </select>
+        <p class="message-erreur" th:each="erreur : ${#fields.errors('note')}" th:text="${erreur}"></p>
+
+        <label for="commentaire">Commentaire (facultatif)</label>
+        <textarea id="commentaire" th:field="*{commentaire}" rows="4"
+                  th:classappend="${#fields.hasErrors('commentaire')} ? 'champ-invalide'"></textarea>
+        <p class="message-erreur" th:each="erreur : ${#fields.errors('commentaire')}" th:text="${erreur}"></p>
+
+        <button type="submit">Enregistrer l'évaluation</button>
+    </form>
+
+    <p><a th:href="@{/incidents/{id}(id=${incident.id})}">← Retour au détail de l'incident</a></p>
+</main>
+</body>
+</html>

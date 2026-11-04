@@ -59,6 +59,17 @@ CREATE TABLE evaluation (
                             FOREIGN KEY (incident_id) REFERENCES incident(id)
 );
 
+-- Lot alpha 5 : journal métier (qui, quand, quoi) des changements d'un incident
+CREATE TABLE evenement_incident (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            incident_id INT NOT NULL,
+                            type VARCHAR(50) NOT NULL,
+                            date_evenement DATETIME NOT NULL,
+                            auteur VARCHAR(50) NOT NULL, -- login en texte : le journal survit à la suppression d'un utilisateur
+                            detail VARCHAR(500) NOT NULL,
+                            FOREIGN KEY (incident_id) REFERENCES incident(id)
+);
+
 -- ==========================================
 -- 2. DONNÉES DE DÉMONSTRATION (INIT)
 -- ==========================================

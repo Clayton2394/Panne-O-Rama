@@ -1,5 +1,6 @@
 package grouph.panneorama.modele;
 
+import grouph.panneorama.exception.IncidentNonEvaluableException;
 import grouph.panneorama.exception.IncidentResoluNonAffectableException;
 import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import grouph.panneorama.exception.TransitionIncidentInterditeException;
@@ -105,6 +106,17 @@ public class Incident {
         verifierAffectable();
         this.prestataire = nouveauPrestataire;
         this.statut = StatutIncident.AFFECTE;
+    }
+
+    // RG8 : on n'évalue que le prestataire d'un incident résolu.
+    public boolean estEvaluable() {
+        return estResolu() && prestataire != null;
+    }
+
+    public void verifierEvaluable() {
+        if (!estEvaluable()) {
+            throw new IncidentNonEvaluableException(id);
+        }
     }
 
     public Integer getId() {
