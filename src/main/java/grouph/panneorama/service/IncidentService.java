@@ -1,13 +1,16 @@
 package grouph.panneorama.service;
 
+import grouph.panneorama.evenement.ChangementIncident;
 import grouph.panneorama.exception.IncidentIntrouvableException;
 import grouph.panneorama.modele.Equipement;
 import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.modele.Prestataire;
 import grouph.panneorama.modele.StatutIncident;
+import grouph.panneorama.modele.TypeEvenementIncident;
 import grouph.panneorama.repository.EvaluationRepository;
 import grouph.panneorama.repository.IncidentRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,23 +28,30 @@ public class IncidentService {
     private final EquipementService equipementService;
     private final PrestataireService prestataireService;
     private final Clock horloge;
+    private final ApplicationEventPublisher evenements;
 
     public IncidentService(IncidentRepository incidentRepository,
                            EvaluationRepository evaluationRepository,
                            EquipementService equipementService,
                            PrestataireService prestataireService,
-                           Clock horloge) {
+                           Clock horloge,
+                           ApplicationEventPublisher evenements) {
         this.incidentRepository = incidentRepository;
         this.evaluationRepository = evaluationRepository;
         this.equipementService = equipementService;
         this.prestataireService = prestataireService;
         this.horloge = horloge;
+        this.evenements = evenements;
     }
 
+    @Transactional
     public Incident declarerIncident(Integer equipementId, String description) {
         Equipement equipement = equipementService.trouverEquipement(equipementId);
         Incident incident = new Incident(equipement, description, LocalDateTime.now(horloge));
-        return incidentRepository.save(incident);
+        Incident enregistre = incidentRepository.save(incident);
+        publier(enregistre, TypeEvenementIncident.DECLARATION,
+                "Incident déclaré sur l'équipement " + equipement.getReference());
+        return enregistre;
     }
 
     public Incident trouverIncident(Integer incidentId) {
@@ -61,6 +71,7 @@ public class IncidentService {
     public Incident modifierDescription(Integer incidentId, String nouvelleDescription) {
         Incident incident = trouverIncident(incidentId);
         incident.modifierDescription(nouvelleDescription);
+        publier(incident, TypeEvenementIncident.MODIFICATION, "Description modifiée");
         return incident;
     }
 
@@ -76,7 +87,15 @@ public class IncidentService {
     public Incident affecterPrestataire(Integer incidentId, Integer prestataireId) {
         Incident incident = trouverIncident(incidentId);
         Prestataire prestataire = prestataireService.trouverPrestataire(prestataireId);
+        Prestataire precedent = incident.getPrestataire();
         incident.affecterPrestataire(prestataire);
+        if (precedent == null) {
+            publier(incident, TypeEvenementIncident.AFFECTATION,
+                    "Affecté au prestataire " + prestataire.getNom());
+        } else {
+            publier(incident, TypeEvenementIncident.REAFFECTATION,
+                    "Réaffecté de " + precedent.getNom() + " à " + prestataire.getNom());
+        }
         return incident;
     }
 
@@ -107,6 +126,11 @@ public class IncidentService {
     public Incident resoudreIncident(Integer incidentId) {
         Incident incident = trouverIncident(incidentId);
         incident.resoudre(LocalDateTime.now(horloge));
+        publier(incident, TypeEvenementIncident.RESOLUTION, "Incident résolu");
         return incident;
+    }
+
+    private void publier(Incident incident, TypeEvenementIncident type, String detail) {
+        evenements.publishEvent(new ChangementIncident(incident, type, detail));
     }
 }

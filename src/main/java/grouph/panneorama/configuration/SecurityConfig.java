@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/connexion", "/error", "/css/**", "/js/**").permitAll()
                         .requestMatchers("/tableau-de-bord/**").hasRole("RESPONSABLE")
+                        .requestMatchers("/journal/**").hasRole("RESPONSABLE")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/connexion")

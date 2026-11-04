@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titre}">Journal</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+
+<main>
+    <h1 th:text="${titre}">Journal</h1>
+
+    <p th:if="${evenements.isEmpty()}">Aucun événement enregistré.</p>
+
+    <table th:unless="${evenements.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Auteur</th>
+            <th>Type</th>
+            <th th:if="${incident == null}">Incident</th>
+            <th>Détail</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="evenement : ${evenements}">
+            <td th:text="${#temporals.format(evenement.dateEvenement, 'dd/MM/yyyy HH:mm')}">Date</td>
+            <td th:text="${evenement.auteur}">Auteur</td>
+            <td th:text="${evenement.type.libelle}">Type</td>
+            <td th:if="${incident == null}">
+                <a th:href="@{/incidents/{id}/journal(id=${evenement.incident.id})}"
+                   th:text="${evenement.incident.equipement.reference} + ' (n° ' + ${evenement.incident.id} + ')'">REF</a>
+            </td>
+            <td th:text="${evenement.detail}">Détail</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${incident != null}">
+        <a th:href="@{/incidents/{id}(id=${incident.id})}">← Retour au détail de l'incident</a>
+    </p>
+    <p><a th:href="@{/}">← Retour à l'accueil</a></p>
+</main>
+</body>
+</html>
