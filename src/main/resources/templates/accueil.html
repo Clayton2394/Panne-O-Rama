@@ -10,5 +10,6 @@
 <p sec:authorize="hasRole('RESPONSABLE')">
     <a th:href="@{/tableau-de-bord}">Tableau de bord des incidents actifs</a>
 </p>
+<a th:href="@{/journal}" sec:authorize="hasRole('RESPONSABLE')">Journal des incidents</a>
 </body>
 </html>
