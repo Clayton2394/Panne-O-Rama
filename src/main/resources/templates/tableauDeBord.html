@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tableau de bord</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
 </head>
 <body>
 <div th:replace="~{fragments/bandeau :: bandeau}"></div>
 
-<main>
+<main class="page">
     <h1>Tableau de bord des incidents actifs</h1>
 
     <section class="indicateurs">
-        <div class="carte"><strong th:text="${tableau.indicateurs.total}">0</strong><span>Incidents actifs</span></div>
-        <div class="carte niveau-rouge"><strong th:text="${tableau.indicateurs.rouges}">0</strong><span>Rouges (72 h et plus)</span></div>
-        <div class="carte niveau-orange"><strong th:text="${tableau.indicateurs.oranges}">0</strong><span>Oranges (48 h à 72 h)</span></div>
-        <div class="carte niveau-vert"><strong th:text="${tableau.indicateurs.verts}">0</strong><span>Verts (moins de 48 h)</span></div>
-        <div class="carte niveau-pris-en-charge"><strong th:text="${tableau.indicateurs.prisEnCharge}">0</strong><span>Pris en charge</span></div>
+        <div class="indicateur"><strong th:text="${tableau.indicateurs.total}">0</strong><span>Incidents actifs</span></div>
+        <div class="indicateur niveau-rouge"><strong th:text="${tableau.indicateurs.rouges}">0</strong><span>Rouges (72 h et plus)</span></div>
+        <div class="indicateur niveau-orange"><strong th:text="${tableau.indicateurs.oranges}">0</strong><span>Oranges (48 h à 72 h)</span></div>
+        <div class="indicateur niveau-vert"><strong th:text="${tableau.indicateurs.verts}">0</strong><span>Verts (moins de 48 h)</span></div>
+        <div class="indicateur niveau-pris-en-charge"><strong th:text="${tableau.indicateurs.prisEnCharge}">0</strong><span>Pris en charge</span></div>
     </section>
 
     <form th:action="@{/tableau-de-bord}" method="get" class="filtres">
