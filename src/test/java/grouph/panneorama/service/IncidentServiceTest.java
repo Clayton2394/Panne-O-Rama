@@ -299,6 +299,33 @@ class IncidentServiceTest {
         verify(evaluationRepository, never()).save(any());
     }
 
+    @Test
+    void evaluerPrestatairePublieUnEvenementDEvaluation() {
+        Prestataire prestataire = new Prestataire();
+        prestataire.setNom("ElecPro");
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(1));
+        incident.affecterPrestataire(prestataire);
+        incident.resoudre(MAINTENANT.minusHours(1));
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        incidentService.evaluerPrestataire(1, 4, null);
+
+        ChangementIncident changement = evenementPublie();
+        assertThat(changement.type()).isEqualTo(TypeEvenementIncident.EVALUATION);
+        assertThat(changement.detail()).contains("ElecPro", "4 / 5");
+    }
+
+    @Test
+    void evaluerPrestataireDejaEvalueNePublieAucunEvenement() {
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incidentResoluEtAffecte()));
+        when(evaluationRepository.existsByIncidentId(1)).thenReturn(true);
+
+        assertThatThrownBy(() -> incidentService.evaluerPrestataire(1, 4, null))
+                .isInstanceOf(IncidentDejaEvalueException.class);
+
+        verifyNoInteractions(evenements);
+    }
+
     private Incident incidentResoluEtAffecte() {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(1));
         incident.affecterPrestataire(new Prestataire());
