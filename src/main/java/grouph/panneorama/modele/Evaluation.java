@@ -21,8 +21,7 @@ public class Evaluation {
     @Column(name = "note", nullable = false)
     private Integer note;
 
-    @Lob
-    @Column(name = "commentaire")
+    @Column(name = "commentaire", columnDefinition = "TEXT")
     private String commentaire;
 
     @Column(name = "date_evaluation", nullable = false)

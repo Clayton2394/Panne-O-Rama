@@ -18,8 +18,8 @@ public class Incident {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Lob
-    @Column(name = "description", nullable = false)
+    // TEXT plutôt que @Lob : sous PostgreSQL, @Lob ferait passer le texte par un « large object » (oid), incompatible avec la colonne TEXT.
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "date_ouverture", nullable = false)
