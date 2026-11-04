@@ -114,8 +114,11 @@ public class IncidentService {
     @PreAuthorize("hasRole('RESPONSABLE')")
     public Evaluation evaluerPrestataire(Integer incidentId, Integer note, String commentaire) {
         Incident incident = trouverIncidentEvaluable(incidentId);
-        Evaluation evaluation = new Evaluation(incident, note, commentaire, LocalDateTime.now(horloge));
-        return evaluationRepository.save(evaluation);
+        Evaluation evaluation = evaluationRepository.save(
+                new Evaluation(incident, note, commentaire, LocalDateTime.now(horloge)));
+        publier(incident, TypeEvenementIncident.EVALUATION,
+                "Prestataire " + incident.getPrestataire().getNom() + " noté " + note + " / " + Evaluation.NOTE_MAXIMALE);
+        return evaluation;
     }
 
     public Optional<Evaluation> trouverEvaluation(Integer incidentId) {
