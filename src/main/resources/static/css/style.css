@@ -76,6 +76,15 @@ select {
     color: #c62828;
 }
 
+.message-succes {
+    color: #1b6b2f;
+}
+
+code {
+    background: #f2f2f2;
+    padding: 0 4px;
+}
+
 button {
     margin-top: 12px;
     padding: 8px 16px;

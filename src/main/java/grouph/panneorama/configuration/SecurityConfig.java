@@ -25,6 +25,7 @@ public class SecurityConfig {
                         .requestMatchers("/connexion", "/error", "/css/**", "/js/**").permitAll()
                         .requestMatchers("/tableau-de-bord/**").hasRole("RESPONSABLE")
                         .requestMatchers("/journal/**").hasRole("RESPONSABLE")
+                        .requestMatchers("/stations/*/equipements/import").hasRole("RESPONSABLE")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/connexion")

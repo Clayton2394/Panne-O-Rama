@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,6 +12,11 @@
 
 <main>
     <h1 th:text="'Équipements de la station ' + ${station.nom}">Équipements</h1>
+
+    <p class="message-succes" th:if="${messageSucces != null}" th:text="${messageSucces}"></p>
+    <p sec:authorize="hasRole('RESPONSABLE')">
+        <a th:href="@{/stations/{id}/equipements/import(id=${station.id})}">Importer des équipements (CSV)</a>
+    </p>
 
     <p th:if="${equipements.isEmpty()}">Aucun équipement dans cette station.</p>
 
