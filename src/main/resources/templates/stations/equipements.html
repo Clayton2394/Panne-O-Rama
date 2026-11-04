@@ -6,16 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="'Équipements - ' + ${station.nom}">Équipements</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
 </head>
 <body>
 <div th:replace="~{fragments/bandeau :: bandeau}"></div>
 
-<main>
+<main class="page">
     <h1 th:text="'Équipements de la station ' + ${station.nom}">Équipements</h1>
 
     <p class="message-succes" th:if="${messageSucces != null}" th:text="${messageSucces}"></p>
     <p sec:authorize="hasRole('RESPONSABLE')">
-        <a th:href="@{/stations/{id}/equipements/import(id=${station.id})}">Importer des équipements (CSV)</a>
+        <a class="bouton-secondaire" th:href="@{/stations/{id}/equipements/import(id=${station.id})}">⬆ Importer des équipements (CSV)</a>
     </p>
 
     <p th:if="${equipements.isEmpty()}">Aucun équipement dans cette station.</p>
@@ -38,9 +39,9 @@
             </td>
             <td th:text="${equipement.type}">Type</td>
             <td>
-            <span th:text="${equipement.etatFonctionnement}"
-                  th:classappend="${equipement.getEtatFonctionnement() == 'FONCTIONNEL'} ? 'etat-ok' : 'etat-panne'"
-                  class="etat">État</span>
+            <span th:text="${equipement.etatFonctionnement == T(grouph.panneorama.modele.EtatEquipement).FONCTIONNEL} ? 'Fonctionnel' : 'En panne'"
+                  th:classappend="${equipement.etatFonctionnement == T(grouph.panneorama.modele.EtatEquipement).FONCTIONNEL} ? 'etat-ok' : 'etat-panne'"
+                  class="badge">État</span>
             </td>
         </tr>
         </tbody>

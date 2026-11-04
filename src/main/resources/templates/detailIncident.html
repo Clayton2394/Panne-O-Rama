@@ -3,21 +3,24 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Détail de l'incident</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
 </head>
 <body>
 <div th:replace="~{fragments/bandeau :: bandeau}"></div>
 <main class="page">
     <h1>
         Incident n° <span th:text="${incident.id}"></span>
-        <span class="statut" th:text="${incident.statut.libelle}"></span>
+        <span class="badge" th:classappend="${'statut-' + incident.statut.name().toLowerCase().replace('_', '-')}"
+              th:text="${incident.statut.libelle}"></span>
     </h1>
 
     <section class="carte">
         <h2>Description</h2>
         <p th:text="${incident.description}"></p>
-        <a th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
+        <a class="bouton-secondaire" th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
            th:href="@{/incidents/{id}/modification(id=${incident.id})}">Modifier la description</a>
     </section>
 
@@ -49,7 +52,7 @@
                 th:text="|${incident.prestataire.nom} (${incident.prestataire.contact})|"></dd>
             <dd th:unless="${incident.prestataire != null}" class="valeur-absente">Aucun prestataire affecté</dd>
         </dl>
-        <a th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
+        <a class="bouton-secondaire" th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
            th:href="@{/incidents/{id}/affectation(id=${incident.id})}"
            th:text="${incident.prestataire == null} ? 'Affecter un prestataire' : 'Réaffecter à un autre prestataire'"></a>
         <form th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
@@ -69,9 +72,14 @@
             <dd th:text="${#temporals.format(evaluation.dateEvaluation, 'dd/MM/yyyy HH:mm')}"></dd>
         </dl>
         <p th:unless="${evaluation != null}" class="valeur-absente">Aucune évaluation pour cet incident</p>
-        <a th:if="${evaluation == null and incident.estEvaluable()}" sec:authorize="hasRole('RESPONSABLE')"
+        <a class="bouton-secondaire" th:if="${evaluation == null and incident.estEvaluable()}" sec:authorize="hasRole('RESPONSABLE')"
            th:href="@{/incidents/{id}/evaluation(id=${incident.id})}">Évaluer le prestataire</a>
     </section>
+
+    <p class="liens-bas">
+        <a th:href="@{/equipements/{id}(id=${incident.equipement.id})}">← Retour à la fiche de l'équipement</a>
+        <a sec:authorize="hasRole('RESPONSABLE')" th:href="@{/incidents/{id}/journal(id=${incident.id})}">Voir le journal de cet incident</a>
+    </p>
 </main>
 </body>
 </html>

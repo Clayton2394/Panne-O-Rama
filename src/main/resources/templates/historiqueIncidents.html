@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Historique des incidents résolus</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
 </head>
 <body>
 <div th:replace="~{fragments/bandeau :: bandeau}"></div>
 
-<main>
+<main class="page">
     <h1>Historique des incidents résolus</h1>
 
     <p th:unless="${incidents.isEmpty()}">
-        <a th:href="@{/incidents/historique/export}">Exporter l'historique en CSV</a>
+        <a class="bouton-secondaire" th:href="@{/incidents/historique/export}">⬇ Exporter l'historique en CSV</a>
     </p>
 
     <p th:if="${incidents.isEmpty()}">Aucun incident résolu pour le moment.</p>

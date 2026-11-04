@@ -1,10 +1,24 @@
-<header th:fragment="bandeau" xmlns:th="http://www.thymeleaf.org"
+<header th:fragment="bandeau" class="bandeau" xmlns:th="http://www.thymeleaf.org"
         xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-    <div sec:authorize="isAuthenticated()" style="text-align:right">
-        Bonjour <span th:text="${#authentication.principal.prenom}"></span>
-        (<span th:text="${#authentication.principal.libelleProfil}"></span>) |
-        <form th:action="@{/deconnexion}" method="post" style="display:inline">
-            <button type="submit" class="lien">Déconnectez-vous</button>
-        </form>
+    <div class="bandeau-contenu">
+        <a class="marque" th:href="@{/}" title="Retour à l'accueil">
+            <img th:src="@{/img/logo-64.png}" alt="" width="40" height="40">
+            <span>Panne<span class="marque-o">-o-</span>rama</span>
+        </a>
+
+        <nav class="navigation" sec:authorize="isAuthenticated()">
+            <a th:href="@{/stations}">Stations</a>
+            <a th:href="@{/incidents/historique}">Historique</a>
+            <a th:href="@{/tableau-de-bord}" sec:authorize="hasRole('RESPONSABLE')">Tableau de bord</a>
+            <a th:href="@{/journal}" sec:authorize="hasRole('RESPONSABLE')">Journal</a>
+        </nav>
+
+        <div class="utilisateur" sec:authorize="isAuthenticated()">
+            Bonjour <strong th:text="${#authentication.principal.prenom}"></strong>
+            (<span th:text="${#authentication.principal.libelleProfil}"></span>) |
+            <form th:action="@{/deconnexion}" method="post">
+                <button type="submit" class="lien">Déconnectez-vous</button>
+            </form>
+        </div>
     </div>
 </header>
