@@ -31,6 +31,10 @@ ni committer de mot de passe :
 | `DB_URL` | `jdbc:mariadb://localhost:3306/supervision_incidents` |
 | `DB_USERNAME` | `root` |
 | `DB_PASSWORD` | *(vide)* |
+| `SPRING_PROFILES_ACTIVE` | *(aucun)* ; `render` en production, pour charger `application-render.properties` |
+
+Le pilote JDBC est déduit de l'URL : la même application fonctionne avec MariaDB en local et avec
+PostgreSQL en production (les deux pilotes sont dans le `pom.xml`).
 
 ### Initialiser la base
 
@@ -55,6 +59,13 @@ le jour où le script est lancé.
 | Moteur grillé | 20 h | affecté | « Pris en charge », jamais de couleur (RG4) |
 | Vitre fêlée | 10 jours | résolu, évalué 4/5 | historique, évaluation, absence du tableau de bord (RG6) |
 
+Le dossier `db/` contient trois scripts :
+
+| Script | Rôle |
+|---|---|
+| `db/create.sql` | installation locale sur **MariaDB** (celui à utiliser) |
+| `db/create-postgres.sql` | même schéma et mêmes données pour **PostgreSQL**, utilisé pour la base déployée ; il ajoute quelques cas limites (60 h, 72 h pile, incident affecté depuis 100 h) |
+| `db/create_db.sql` | export phpMyAdmin de notre base de travail, conservé pour référence : ses dates sont fixes et il ne crée pas la base |
 
 ### Lancer l'application
 
@@ -69,6 +80,9 @@ Puis ouvrir <http://localhost:8080>. La documentation de l'API REST (Swagger UI)
 
 Lien de l'application déployée : <https://panne-o-rama.onrender.com/>
 
+- **Hébergement :** Render. L'application est construite par le `Dockerfile`  et se connecte à une base **PostgreSQL** Render,
+  initialisée avec `db/create-postgres.sql`.
+
 ### Comptes de test
 
 | Profil | Identifiant | Mot de passe |
@@ -76,7 +90,7 @@ Lien de l'application déployée : <https://panne-o-rama.onrender.com/>
 | Responsable d'exploitation | `resp1` | `responsable` |
 | Agent de signalement | `agent1` | `agent` |
 
-Les mots de passe ne sont stockés qu'**hachés avec BCrypt**, dans la base comme dans `db/create.sql` (§7.7).
+Les mots de passe ne sont stockés qu'**hachés avec BCrypt**, dans la base comme dans les scripts SQL (§7.7).
 
 ### Limites connues
 
@@ -95,50 +109,10 @@ Les mots de passe ne sont stockés qu'**hachés avec BCrypt**, dans la base comm
 
 - **Dépôt :** <https://github.com/Clayton2394/Panne-O-Rama>
 - **Pile :** Spring Boot 4.1.1, Java 21, Spring MVC, Spring Data JPA (Hibernate), Spring Security,
-  Bean Validation, Thymeleaf (+ `thymeleaf-extras-springsecurity6`), MariaDB, springdoc-openapi 3,
-  Apache Commons CSV, JUnit 5, Mockito, AssertJ, H2 (tests de repository).
-
-### Schéma
-
-```mermaid
-flowchart TB
-    navigateur["Navigateur<br/>(pages Thymeleaf)"]
-    client["Client REST<br/>(Swagger, curl…)"]
-
-    subgraph securite["Spring Security"]
-        web["Chaîne web : formulaire de connexion, session, CSRF"]
-        api["Chaîne API /api/** : HTTP Basic, sans état"]
-    end
-
-    subgraph controleurs["controleur — HTTP uniquement, aucune règle métier"]
-        ctrlWeb["IncidentControleur · EquipementControleur · StationControleur<br/>TableauDeBordControleur · JournalControleur · DonneesCsvControleur"]
-        ctrlApi["IncidentAPIControleur → dto.IncidentDTO"]
-        erreurs["GestionnaireErreurs / GestionnaireErreursAPI<br/>(@ControllerAdvice)"]
-    end
-
-    subgraph services["service — cas d'utilisation, transactions, droits (@PreAuthorize)"]
-        srv["IncidentService · EquipementService · StationService · PrestataireService<br/>TableauDeBordService · JournalIncidentService<br/>ExportHistoriqueService · ImportEquipementsService"]
-    end
-
-    subgraph modele["modele — entités JPA et règles métier RG1 à RG9"]
-        ent["Incident · Evaluation · Equipement · Station · Prestataire · Utilisateur<br/>NiveauAttention (seuils 48 h / 72 h) · EvenementIncident"]
-    end
-
-    evenements["evenement : ChangementIncident → JournalIncidentEcouteur"]
-    repos["repository — Spring Data JPA<br/>(requêtes dérivées + JPQL)"]
-    bdd[("MariaDB<br/>supervision_incidents")]
-
-    navigateur --> web --> ctrlWeb
-    client --> api --> ctrlApi
-    ctrlWeb --> srv
-    ctrlApi --> srv
-    srv --> ent
-    srv -- publie --> evenements
-    evenements --> srv
-    srv --> repos --> bdd
-    ctrlWeb -. exceptions métier .-> erreurs
-    ctrlApi -. exceptions métier .-> erreurs
-```
+  Bean Validation, Thymeleaf (+ `thymeleaf-extras-springsecurity6`), MariaDB (local) et PostgreSQL
+  (production), springdoc-openapi 3, Apache Commons CSV, JUnit 5, Mockito, AssertJ, H2 (tests de
+  repository), Docker et Render (déploiement).
+- **Schéma :** ![architecture](docs/architecture.png)
 
 ### Découpage en packages
 
@@ -427,10 +401,11 @@ ORDER BY p.nom
   - **Couplage à la base.** Hibernate ne traduit pas le SQL natif. Une fonction propre à MariaDB rendrait
     l'application impossible à porter sur un autre SGBD, et casserait les tests qui tournent sur H2. Nous
     nous sommes donc limités à du **SQL standard**, et `PrestataireRepositoryTest` l'exécute justement sur
-    H2 pour le vérifier.
+    H2 pour le vérifier. Ce choix a été confirmé au déploiement : la requête a fonctionné **sans
+    modification** sur PostgreSQL.
   - **Pas de mapping objet.** Le résultat n'est pas une entité gérée. Il faut une projection, et le type des
-    colonnes calculées dépend du pilote : `AVG` renvoie un `DECIMAL` sous MariaDB, que Spring convertit en
-    `Double`.
+    colonnes calculées dépend du pilote : `AVG` renvoie un `DECIMAL` sous MariaDB et un `NUMERIC` sous
+    PostgreSQL, que Spring convertit en `Double`.
 - **Conclusion.**
   - Le SQL natif est pertinent pour une **lecture ponctuelle d'agrégation**, où il est plus simple et plus
     efficace.
@@ -619,6 +594,17 @@ Chaque fonctionnalité a été développée sur sa propre branche puis intégré
   - Des hachages de mots de passe factices dans le script et la table du journal absente nous ont montré
     qu'une base modifiée à la main masque les oublis.
   - Nous avons appris à retester systématiquement sur une base recréée par `db/create.sql`.
+- **Le passage de MariaDB à PostgreSQL au déploiement.**
+  - L'application démarrait d'abord en échec (« Unable to determine Dialect ») : l'URL fournie par Render
+    (`postgresql://utilisateur:motdepasse@hôte/base`) n'est pas une URL JDBC. Il a fallu la réécrire en
+    `jdbc:postgresql://hôte:5432/base` et passer l'identifiant et le mot de passe dans leurs propres
+    variables.
+  - Une fois démarrée, toute déclaration d'incident renvoyait une erreur 500. L'annotation `@Lob` sur la
+    description et le commentaire, sans effet sous MariaDB, fait stocker le texte par PostgreSQL comme un
+    « large object » (`oid`), incompatible avec la colonne `TEXT`. Nous l'avons remplacée par
+    `@Column(columnDefinition = "TEXT")`, valable sur les trois bases (MariaDB, PostgreSQL, H2).
+  - Leçon : une annotation JPA n'est pas toujours neutre vis-à-vis de la base, et ne tester que sur la
+    base de développement ne garantit pas que l'application fonctionne en production.
 
 ### Fonctionnalités non réalisées et pourquoi
 
