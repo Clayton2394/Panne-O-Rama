@@ -1,6 +1,7 @@
 package grouph.panneorama.controleur;
 
 import grouph.panneorama.formulaire.AffectationPrestataireFormulaire;
+import grouph.panneorama.formulaire.DeclarationIncidentFormulaire;
 import grouph.panneorama.formulaire.DescriptionIncidentFormulaire;
 import grouph.panneorama.formulaire.EvaluationFormulaire;
 import grouph.panneorama.modele.Evaluation;
@@ -49,6 +50,26 @@ public class IncidentControleur {
             return "declarationIncident";
         }
         Incident incident = incidentService.declarerIncident(equipementId, formulaire.getDescription());
+        return "redirect:/incidents/" + incident.getId();
+    }
+
+    // F4 depuis l'accueil ou le bandeau : l'équipement est choisi dans le formulaire.
+    @GetMapping("/incidents/nouveau")
+    public String afficherFormulaireNouvelIncident(Model model) {
+        model.addAttribute("equipementsParStation", equipementService.listerRegroupesParStation());
+        model.addAttribute("formulaire", new DeclarationIncidentFormulaire());
+        return "nouvelIncident";
+    }
+
+    @PostMapping("/incidents")
+    public String declarerNouvelIncident(@Valid @ModelAttribute("formulaire") DeclarationIncidentFormulaire formulaire,
+                                         BindingResult resultatValidation,
+                                         Model model) {
+        if (resultatValidation.hasErrors()) {
+            model.addAttribute("equipementsParStation", equipementService.listerRegroupesParStation());
+            return "nouvelIncident";
+        }
+        Incident incident = incidentService.declarerIncident(formulaire.getEquipementId(), formulaire.getDescription());
         return "redirect:/incidents/" + incident.getId();
     }
 

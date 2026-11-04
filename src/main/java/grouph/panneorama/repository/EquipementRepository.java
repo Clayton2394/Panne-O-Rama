@@ -13,6 +13,9 @@ import java.util.Set;
 public interface EquipementRepository extends JpaRepository<Equipement, Integer> {
     List<Equipement> findByStationIdOrderByDescriptionAsc(Integer stationId);
 
+    @Query("SELECT e FROM Equipement e JOIN FETCH e.station s ORDER BY s.nom, e.reference")
+    List<Equipement> listerTousAvecStation();
+
     @Query("SELECT e.reference FROM Equipement e WHERE e.reference IN :references")
     Set<String> trouverReferencesExistantes(@Param("references") Collection<String> references);
 

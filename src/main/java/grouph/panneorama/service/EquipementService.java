@@ -5,7 +5,10 @@ import grouph.panneorama.modele.Equipement;
 import grouph.panneorama.repository.EquipementRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class EquipementService {
@@ -26,5 +29,12 @@ public class EquipementService {
     public List<Equipement> listerParStation(Integer stationId) {
         stationService.trouverStation(stationId);
         return equipementRepository.findByStationIdOrderByDescriptionAsc(stationId);
+    }
+
+    // F4 depuis l'accueil : tous les équipements, regroupés par station (ordre alphabétique conservé).
+    public Map<String, List<Equipement>> listerRegroupesParStation() {
+        return equipementRepository.listerTousAvecStation().stream()
+                .collect(Collectors.groupingBy(equipement -> equipement.getStation().getNom(),
+                        LinkedHashMap::new, Collectors.toList()));
     }
 }

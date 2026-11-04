@@ -7,6 +7,7 @@
         </a>
 
         <nav class="navigation" sec:authorize="isAuthenticated()">
+            <a th:href="@{/incidents/nouveau}">Déclarer</a>
             <a th:href="@{/stations}">Stations</a>
             <a th:href="@{/incidents/historique}">Historique</a>
             <a th:href="@{/tableau-de-bord}" sec:authorize="hasRole('RESPONSABLE')">Tableau de bord</a>
