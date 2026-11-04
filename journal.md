@@ -85,8 +85,8 @@ Les mots de passe ne sont stockés qu'**hachés avec BCrypt**, dans la base comm
 - L'import CSV ajoute des équipements ; il ne met pas à jour des équipements existants.
 - Les listes (historique, journal) ne sont pas paginées ; le journal global se limite aux 200 derniers
   événements.
-- La note d'un prestataire se consulte sur le détail de chaque incident ; il n'y a pas encore de fiche
-  prestataire avec sa note moyenne.
+- La note d'une intervention se consulte sur le détail de l'incident, et la note moyenne de chaque
+  prestataire sur la page d'affectation ; il n'y a pas de fiche prestataire dédiée.
 - Le type d'un équipement est affiché sous la forme de son code (`ASCENSEUR`, `ECRAN_INFORMATION`…).
 
 ---
@@ -189,8 +189,9 @@ conformément à la pyramide des tests :
    `ImportEquipementsServiceTest`, `ExportHistoriqueServiceTest`, `JournalIncidentTestService`…) : les
    repositories et services voisins sont simulés avec Mockito. On vérifie l'orchestration : ce qui est
    enregistré, ce qui ne l'est **pas** en cas d'erreur, les événements publiés.
-3. **Tests de repository** (`IncidentRepositoryTest`, `@DataJpaTest` sur une base H2 en mémoire) : ils
-   vérifient les requêtes JPQL écrites à la main (tri et filtre de l'historique).
+3. **Tests de repository** (`IncidentRepositoryTest`, `PrestataireRepositoryTest`, `@DataJpaTest` sur une
+   base H2 en mémoire) : ils vérifient les requêtes écrites à la main, c'est-à-dire le tri et le filtre de
+   l'historique en JPQL, et le calcul de la note moyenne en SQL natif.
 4. **Test de démarrage** (`PanneORamaApplicationTests`, `@SpringBootTest`) : le contexte Spring complet se
    charge.
 
@@ -219,6 +220,7 @@ Le test `@SpringBootTest` a besoin de la base MariaDB démarrée ; les autres te
 | RG5 — résolution datée, ≥ ouverture, unique ; résolu non réaffectable | `resoudreAvantLOuvertureEstInterdit`, `resoudreExactementALOuvertureEstAutorise`, `resoudreUnIncidentDejaResoluEstInterdit`, `affecterPrestataireIncidentResoluEstInterditEtNeChangeRien` |
 | RG6 — un résolu sort du tableau de bord | `incidentResoluNAPasDeNiveauDAttention`, `lesIndicateursPortentSurTousLesIncidentsActifsMemeFiltres` |
 | RG7 — historique du plus récent au plus ancien | `findHistoriqueResolus_trieDuPlusRecentAuPlusAncien`, `findHistoriqueResolus_exclutLesIncidentsNonResolus` |
+| F10 — note moyenne des prestataires (requête native) | `laNoteMoyenneEtLeNombreDEvaluationsSontCalculesParPrestataire`, `unPrestataireJamaisEvalueApparaitSansNote` |
 | RG8 — évaluation : résolu et affecté, une seule, note 1 à 5 | `EvaluationTest` (bornes 1 et 5, 0 et 6 refusés), `incidentResoluSansPrestataireNEstPasEvaluable`, `evaluerPrestataireDejaEvalueLeveIncidentDejaEvalue…` |
 | RG9 — référence d'équipement unique | `uneReferenceDejaEnBaseEstRefuseeSelonRG9`, `uneReferenceEnDoubleDansLeFichierEstRefusee` |
 | RG10 — une opération refusée ne modifie rien | `uneResolutionRefuseeLaisseLIncidentInchange`, `modifierDescriptionIncidentResoluEstInterditEtNeChangeRien`, `affecterPrestataireInexistantLevePrestataireIntrouvableEtNeChangeRien`, `uneSeuleLigneInvalideRefuseToutLImport`, `…NePublieAucunEvenement` |
@@ -386,11 +388,60 @@ ailleurs, une vue ou un objet suffit.
 
 ### Requête SQL native
 
-`TODO : à compléter une fois la requête native ajoutée (exigence §7.6, en cours sur une branche dédiée).`
+Une seule requête native dans tout le projet : `PrestataireRepository.listerAvecNoteMoyenne()`.
+
+```sql
+SELECT p.id AS id, p.nom AS nom, p.contact AS contact,
+       AVG(e.note) AS noteMoyenne, COUNT(e.id) AS nombreEvaluations
+FROM prestataire p
+LEFT JOIN incident i ON i.prestataire_id = p.id
+LEFT JOIN evaluation e ON e.incident_id = i.id
+GROUP BY p.id, p.nom, p.contact
+ORDER BY p.nom
+```
+
+**À quoi elle sert.**
+
+- Sur la page d'affectation (F7), chaque prestataire de la liste affiche sa **note moyenne** et son
+  **nombre d'évaluations**, par exemple « ElevatorTech · ★ 3,5 / 5 sur 2 évaluation(s) », ou « pas encore
+  évalué ».
+- Le responsable choisit ainsi à qui confier un incident en connaissant la qualité des interventions
+  passées. La note saisie en F10 est donc consultable à l'endroit où elle est utile.
+- Le résultat est lu à travers une **projection** (interface `dto.PrestataireNote`) et non une entité, car
+  ce n'est pas une ligne d'une table mais un calcul.
+
+**Analyse critique.**
+
+- **Ce que le SQL natif apporte ici.**
+  - L'agrégation traverse trois tables (`AVG`, `COUNT`, `GROUP BY`), avec des `LEFT JOIN` pour conserver
+    les prestataires jamais évalués.
+  - Tout est calculé **par la base, en une seule requête**, au lieu de charger toutes les évaluations en
+    mémoire pour faire la moyenne en Java.
+  - La requête se lit comme le SQL que l'on écrirait à la main, et se teste directement dans la console
+    MariaDB.
+- **Ce qu'il coûte.**
+  - **Couplage au schéma.** La requête utilise des noms de tables et de colonnes (`prestataire_id`,
+    `incident_id`) et non les noms Java. Si un champ est renommé dans une entité, rien ne prévient à la
+    compilation : l'erreur n'apparaît **qu'à l'exécution**. Une requête JPQL invalide, elle, est détectée
+    dès le démarrage de l'application.
+  - **Couplage à la base.** Hibernate ne traduit pas le SQL natif. Une fonction propre à MariaDB rendrait
+    l'application impossible à porter sur un autre SGBD, et casserait les tests qui tournent sur H2. Nous
+    nous sommes donc limités à du **SQL standard**, et `PrestataireRepositoryTest` l'exécute justement sur
+    H2 pour le vérifier.
+  - **Pas de mapping objet.** Le résultat n'est pas une entité gérée. Il faut une projection, et le type des
+    colonnes calculées dépend du pilote : `AVG` renvoie un `DECIMAL` sous MariaDB, que Spring convertit en
+    `Double`.
+- **Conclusion.**
+  - Le SQL natif est pertinent pour une **lecture ponctuelle d'agrégation**, où il est plus simple et plus
+    efficace.
+  - Il ne l'est pas pour le reste de l'application, qui manipule des entités et doit rester indépendante de
+    la base : c'est pourquoi toutes les autres requêtes sont dérivées ou en JPQL.
+  - On aurait pu écrire cette requête en JPQL avec une expression `SELECT new …`. Le SQL natif nous a semblé
+    le meilleur endroit pour répondre à l'exigence, car c'est la requête la plus « SQL » du projet.
 
 Les autres requêtes combinent :
 
-- des **requêtes dérivées** : `findByEquipementIdOrderByDateOuvertureDesc`, `findAllByOrderByNomAsc`,
+- des **requêtes dérivées** : `findByEquipementIdOrderByDateOuvertureDesc`, `findAllByOrderByNomAsc` (stations),
   `findByLogin`, `existsByIncidentId`, `findByIncidentIdOrderByDateEvenementAscIdAsc`…
 - du **JPQL** : `findHistoriqueResolus`, `findActifsAvecDetails`, `trouverAvecEquipementEtPrestataire`,
   `trouverReferencesExistantes`…
@@ -574,9 +625,9 @@ Chaque fonctionnalité a été développée sur sa propre branche puis intégré
 Toutes les fonctionnalités du socle (F1 à F12) et les deux fonctionnalités transverses choisies sont
 réalisées. Nous avons laissé de côté, faute de temps et pour privilégier la solidité du socle :
 
-- **une fiche prestataire avec sa note moyenne** : la note d'une intervention est aujourd'hui consultable
-  sur le détail de l'incident, ce qui répond à F10, mais une vue synthétique par prestataire aurait été
-  plus utile au responsable pour choisir à qui confier un incident ;
+- **une fiche prestataire complète** : la note moyenne de chaque prestataire est affichée au moment de
+  l'affectation, mais une page dédiée, avec l'historique de ses interventions, compléterait l'aide au
+  choix ;
 - **des tests automatisés des contrôleurs et de la sécurité** (`MockMvc`) : les restrictions de profil ont
   été vérifiées manuellement, mais pas encore automatisées ;
 - **la pagination et les filtres** de l'historique et du journal global, inutiles avec le volume de
