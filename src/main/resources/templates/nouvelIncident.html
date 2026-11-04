@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Déclarer un incident · Panne-o-rama</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/img/favicon.png}">
+</head>
+<body>
+<div th:replace="~{fragments/bandeau :: bandeau}"></div>
+<main class="page">
+    <h1>Déclarer un incident</h1>
+    <p class="sous-titre">Choisissez l'équipement en panne, puis décrivez le problème constaté.</p>
+
+    <form class="carte" th:action="@{/incidents}" th:object="${formulaire}" method="post">
+        <label for="equipementId">Équipement concerné</label>
+        <select id="equipementId" th:field="*{equipementId}"
+                th:classappend="${#fields.hasErrors('equipementId')} ? 'champ-invalide'">
+            <option value="">-- Choisir un équipement --</option>
+            <optgroup th:each="station : ${equipementsParStation}" th:label="${station.key}">
+                <option th:each="equipement : ${station.value}" th:value="${equipement.id}"
+                        th:text="|${equipement.reference} – ${equipement.description}|"></option>
+            </optgroup>
+        </select>
+        <p class="message-erreur" th:each="erreur : ${#fields.errors('equipementId')}" th:text="${erreur}"></p>
+
+        <label for="description">Description de la panne</label>
+        <textarea id="description" th:field="*{description}" rows="5"
+                  placeholder="Exemple : la porte de l'ascenseur reste bloquée au quai 1."
+                  th:classappend="${#fields.hasErrors('description')} ? 'champ-invalide'"></textarea>
+        <p class="message-erreur" th:each="erreur : ${#fields.errors('description')}" th:text="${erreur}"></p>
+
+        <button type="submit">Déclarer l'incident</button>
+    </form>
+
+    <p><a th:href="@{/}">← Retour à l'accueil</a></p>
+</main>
+</body>
+</html>

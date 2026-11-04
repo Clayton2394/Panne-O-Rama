@@ -164,7 +164,7 @@ peut être testée seule, en simulant (mock) la couche du dessous.
 | F1 | Connexion / déconnexion | `GET/POST /connexion`, `POST /deconnexion` | `SecurityConfig`, `UtilisateurDetailsService`, `UtilisateurConnecte` ; « Bonjour Prénom (profil) \| Déconnectez-vous » dans le bandeau commun |
 | F2 | Équipements par station | `GET /stations`, `GET /stations/{id}/equipements` | `StationService`, `EquipementService` ; type et état affichés |
 | F3 | Fiche d'un équipement | `GET /equipements/{id}` | incidents triés par date d'ouverture décroissante (RG7, requête dérivée) |
-| F4 | Déclarer un incident | `GET /equipements/{id}/incidents/nouveau`, `POST /equipements/{id}/incidents` | RG1 dans le constructeur d'`Incident` (non affecté, sans prestataire, date du serveur) |
+| F4 | Déclarer un incident | depuis la fiche équipement : `GET /equipements/{id}/incidents/nouveau`, `POST /equipements/{id}/incidents` ; depuis l'accueil ou le bandeau : `GET /incidents/nouveau`, `POST /incidents` (équipement choisi dans une liste regroupée par station) | RG1 dans le constructeur d'`Incident` (non affecté, sans prestataire, date du serveur) ; les deux formulaires partagent la validation de la description (`DeclarationIncidentFormulaire` hérite de `DescriptionIncidentFormulaire`) |
 | F5 | Détail d'un incident | `GET /incidents/{id}` | durée d'ouverture calculée par `Incident.dureeOuverture(Clock)` ; prestataire et évaluation éventuels |
 | F6 | Modifier un incident | `GET /incidents/{id}/modification`, `PATCH /incidents/{id}` | `Incident.modifierDescription()` refuse un incident résolu |
 | F7 | Affecter / réaffecter | `GET /incidents/{id}/affectation`, `PATCH /incidents/{id}/prestataire` | `Incident.affecterPrestataire()` ; RG5 : refus si résolu |

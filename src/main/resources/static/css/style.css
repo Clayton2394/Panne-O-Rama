@@ -204,6 +204,20 @@ button.lien {
     color: var(--texte-doux);
 }
 
+.tuile.tuile-principale {
+    background: var(--bleu-nuit);
+    border-color: var(--bleu-nuit);
+    color: var(--gris-clair);
+}
+
+.tuile.tuile-principale:hover {
+    color: var(--gris-clair);
+}
+
+.tuile.tuile-principale strong {
+    color: var(--jaune);
+}
+
 .tuile strong {
     font-family: var(--police-titre);
     font-size: 1.2rem;
