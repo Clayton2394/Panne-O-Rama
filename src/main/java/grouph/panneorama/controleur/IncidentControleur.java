@@ -2,6 +2,8 @@ package grouph.panneorama.controleur;
 
 import grouph.panneorama.formulaire.AffectationPrestataireFormulaire;
 import grouph.panneorama.formulaire.DescriptionIncidentFormulaire;
+import grouph.panneorama.formulaire.EvaluationFormulaire;
+import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.service.EquipementService;
 import grouph.panneorama.service.IncidentService;
@@ -113,6 +115,28 @@ public class IncidentControleur {
     @PatchMapping("/incidents/{incidentId}/resolution")
     public String resoudreIncident(@PathVariable Integer incidentId) {
         incidentService.resoudreIncident(incidentId);
+        return "redirect:/incidents/" + incidentId;
+    }
+
+    @GetMapping("/incidents/{incidentId}/evaluation")
+    public String afficherFormulaireEvaluation(@PathVariable Integer incidentId, Model model) {
+        model.addAttribute("incident", incidentService.trouverIncidentEvaluable(incidentId));
+        model.addAttribute("notesPossibles", Evaluation.notesPossibles());
+        model.addAttribute("formulaire", new EvaluationFormulaire());
+        return "evaluationIncident";
+    }
+
+    @PostMapping("/incidents/{incidentId}/evaluation")
+    public String evaluerPrestataire(@PathVariable Integer incidentId,
+                                     @Valid @ModelAttribute("formulaire") EvaluationFormulaire formulaire,
+                                     BindingResult resultatValidation,
+                                     Model model) {
+        if (resultatValidation.hasErrors()) {
+            model.addAttribute("incident", incidentService.trouverIncidentEvaluable(incidentId));
+            model.addAttribute("notesPossibles", Evaluation.notesPossibles());
+            return "evaluationIncident";
+        }
+        incidentService.evaluerPrestataire(incidentId, formulaire.getNote(), formulaire.getCommentaire());
         return "redirect:/incidents/" + incidentId;
     }
 

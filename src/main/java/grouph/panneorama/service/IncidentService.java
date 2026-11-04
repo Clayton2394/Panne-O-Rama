@@ -1,6 +1,7 @@
 package grouph.panneorama.service;
 
 import grouph.panneorama.evenement.ChangementIncident;
+import grouph.panneorama.exception.IncidentDejaEvalueException;
 import grouph.panneorama.exception.IncidentIntrouvableException;
 import grouph.panneorama.modele.Equipement;
 import grouph.panneorama.modele.Evaluation;
@@ -97,6 +98,24 @@ public class IncidentService {
                     "Réaffecté de " + precedent.getNom() + " à " + prestataire.getNom());
         }
         return incident;
+    }
+
+    @PreAuthorize("hasRole('RESPONSABLE')")
+    public Incident trouverIncidentEvaluable(Integer incidentId) {
+        Incident incident = trouverIncident(incidentId);
+        incident.verifierEvaluable();
+        if (evaluationRepository.existsByIncidentId(incidentId)) {
+            throw new IncidentDejaEvalueException(incidentId);
+        }
+        return incident;
+    }
+
+    @Transactional
+    @PreAuthorize("hasRole('RESPONSABLE')")
+    public Evaluation evaluerPrestataire(Integer incidentId, Integer note, String commentaire) {
+        Incident incident = trouverIncidentEvaluable(incidentId);
+        Evaluation evaluation = new Evaluation(incident, note, commentaire, LocalDateTime.now(horloge));
+        return evaluationRepository.save(evaluation);
     }
 
     public Optional<Evaluation> trouverEvaluation(Integer incidentId) {

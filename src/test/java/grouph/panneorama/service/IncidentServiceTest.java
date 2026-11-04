@@ -1,13 +1,16 @@
 package grouph.panneorama.service;
 
 import grouph.panneorama.exception.EquipementIntrouvableException;
+import grouph.panneorama.exception.IncidentDejaEvalueException;
 import grouph.panneorama.exception.IncidentIntrouvableException;
+import grouph.panneorama.exception.IncidentNonEvaluableException;
 import grouph.panneorama.exception.IncidentResoluNonAffectableException;
 import grouph.panneorama.exception.IncidentResoluNonModifiableException;
 import grouph.panneorama.exception.PrestataireIntrouvableException;
 import grouph.panneorama.exception.TransitionIncidentInterditeException;
 import grouph.panneorama.modele.Equipement;
 import org.springframework.context.ApplicationEventPublisher;
+import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.modele.Prestataire;
 import grouph.panneorama.modele.StatutIncident;
@@ -39,6 +42,7 @@ class IncidentServiceTest {
     private static final LocalDateTime MAINTENANT = LocalDateTime.of(2026, 10, 28, 12, 0);
 
     private IncidentRepository incidentRepository;
+    private EvaluationRepository evaluationRepository;
     private EquipementService equipementService;
     private PrestataireService prestataireService;
     private IncidentService incidentService;
@@ -47,13 +51,15 @@ class IncidentServiceTest {
     @BeforeEach
     void initialiser() {
         incidentRepository = mock(IncidentRepository.class);
+        evaluationRepository = mock(EvaluationRepository.class);
         equipementService = mock(EquipementService.class);
         prestataireService = mock(PrestataireService.class);
         evenements = mock(ApplicationEventPublisher.class);
         Clock horlogeFigee = Clock.fixed(MAINTENANT.atZone(FUSEAU).toInstant(), FUSEAU);
-        incidentService = new IncidentService(incidentRepository, mock(EvaluationRepository.class),
+        incidentService = new IncidentService(incidentRepository, evaluationRepository,
                 equipementService, prestataireService, horlogeFigee, evenements);
         when(incidentRepository.save(any(Incident.class))).thenAnswer(appel -> appel.getArgument(0));
+        when(evaluationRepository.save(any(Evaluation.class))).thenAnswer(appel -> appel.getArgument(0));
     }
 
     @Test
@@ -257,5 +263,46 @@ class IncidentServiceTest {
         ArgumentCaptor<ChangementIncident> capteur = ArgumentCaptor.forClass(ChangementIncident.class);
         verify(evenements).publishEvent(capteur.capture());
         return capteur.getValue();
+    }
+
+    @Test
+    void evaluerPrestataireEnregistreLEvaluationAvecLaDateCourante() {
+        Incident incident = incidentResoluEtAffecte();
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        Evaluation evaluation = incidentService.evaluerPrestataire(1, 4, "Intervention rapide");
+
+        assertThat(evaluation.getIncident()).isSameAs(incident);
+        assertThat(evaluation.getNote()).isEqualTo(4);
+        assertThat(evaluation.getDateEvaluation()).isEqualTo(MAINTENANT);
+        verify(evaluationRepository).save(evaluation);
+    }
+
+    @Test
+    void evaluerPrestataireDejaEvalueLeveIncidentDejaEvalueEtNEnregistreRien() {
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incidentResoluEtAffecte()));
+        when(evaluationRepository.existsByIncidentId(1)).thenReturn(true);
+
+        assertThatThrownBy(() -> incidentService.evaluerPrestataire(1, 4, null))
+                .isInstanceOf(IncidentDejaEvalueException.class);
+        verify(evaluationRepository, never()).save(any());
+    }
+
+    @Test
+    void evaluerPrestataireIncidentNonResoluLeveIncidentNonEvaluableEtNEnregistreRien() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        incident.affecterPrestataire(new Prestataire());
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+
+        assertThatThrownBy(() -> incidentService.evaluerPrestataire(1, 4, null))
+                .isInstanceOf(IncidentNonEvaluableException.class);
+        verify(evaluationRepository, never()).save(any());
+    }
+
+    private Incident incidentResoluEtAffecte() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(1));
+        incident.affecterPrestataire(new Prestataire());
+        incident.resoudre(MAINTENANT.minusHours(1));
+        return incident;
     }
 }
