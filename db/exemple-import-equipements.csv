@@ -1,0 +1,4 @@
+reference;description;type;etat
+ASC-101;Ascenseur quai 2;ASCENSEUR;FONCTIONNEL
+ESC-102;Escalator accès métro;ESCALATOR;EN_PANNE
+ECR-103;Écran d'information hall nord;ECRAN_INFORMATION;

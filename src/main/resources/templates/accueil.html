@@ -7,6 +7,9 @@
 <div th:replace="~{fragments/bandeau :: bandeau}"></div>
 <h1>Accueil</h1>
 <a th:href="@{/stations}">Consulter les stations</a>
+<p>
+    <a th:href="@{/incidents/historique}">Historique des incidents résolus</a>
+</p>
 <p sec:authorize="hasRole('RESPONSABLE')">
     <a th:href="@{/tableau-de-bord}">Tableau de bord des incidents actifs</a>
 </p>

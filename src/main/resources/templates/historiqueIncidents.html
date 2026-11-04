@@ -12,6 +12,10 @@
 <main>
     <h1>Historique des incidents résolus</h1>
 
+    <p th:unless="${incidents.isEmpty()}">
+        <a th:href="@{/incidents/historique/export}">Exporter l'historique en CSV</a>
+    </p>
+
     <p th:if="${incidents.isEmpty()}">Aucun incident résolu pour le moment.</p>
 
     <table th:unless="${incidents.isEmpty()}">
