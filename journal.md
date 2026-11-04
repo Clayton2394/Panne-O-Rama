@@ -67,7 +67,7 @@ Puis ouvrir <http://localhost:8080>. La documentation de l'API REST (Swagger UI)
 
 ### Application déployée
 
-`URL A METTRE APRES AVOIR DEPLOYER L'APPLICATION`
+Lien de l'application déployée : <https://panne-o-rama.onrender.com/>
 
 ### Comptes de test
 
