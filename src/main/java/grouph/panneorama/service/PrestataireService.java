@@ -1,5 +1,6 @@
 package grouph.panneorama.service;
 
+import grouph.panneorama.dto.PrestataireNote;
 import grouph.panneorama.exception.PrestataireIntrouvableException;
 import grouph.panneorama.modele.Prestataire;
 import grouph.panneorama.repository.PrestataireRepository;
@@ -15,8 +16,9 @@ public class PrestataireService {
         this.prestataireRepository = prestataireRepository;
     }
 
-    public List<Prestataire> listerPrestataires() {
-        return prestataireRepository.findAllByOrderByNomAsc();
+    // F7 : le responsable choisit un prestataire en voyant la qualité de ses interventions passées (F10).
+    public List<PrestataireNote> listerPrestatairesAvecNote() {
+        return prestataireRepository.listerAvecNoteMoyenne();
     }
 
     public Prestataire trouverPrestataire(Integer prestataireId) {
