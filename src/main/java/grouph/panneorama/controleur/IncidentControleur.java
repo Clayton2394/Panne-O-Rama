@@ -93,7 +93,7 @@ public class IncidentControleur {
             formulaire.setPrestataireId(incident.getPrestataire().getId());
         }
         model.addAttribute("incident", incident);
-        model.addAttribute("prestataires", prestataireService.listerPrestataires());
+        model.addAttribute("prestataires", prestataireService.listerPrestatairesAvecNote());
         model.addAttribute("formulaire", formulaire);
         return "affectationIncident";
     }
@@ -105,7 +105,7 @@ public class IncidentControleur {
                                       Model model) {
         if (resultatValidation.hasErrors()) {
             model.addAttribute("incident", incidentService.trouverIncidentAffectable(incidentId));
-            model.addAttribute("prestataires", prestataireService.listerPrestataires());
+            model.addAttribute("prestataires", prestataireService.listerPrestatairesAvecNote());
             return "affectationIncident";
         }
         incidentService.affecterPrestataire(incidentId, formulaire.getPrestataireId());
