@@ -67,7 +67,7 @@ Puis ouvrir <http://localhost:8080>. La documentation de l'API REST (Swagger UI)
 
 ### Application déployée
 
-`TODO : URL de l'application déployée (§7.9)`
+`URL A METTRE APRES AVOIR DEPLOYER L'APPLICATION`
 
 ### Comptes de test
 
