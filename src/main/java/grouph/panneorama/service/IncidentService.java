@@ -106,6 +106,12 @@ public class IncidentService {
         return incident;
     }
 
+    // Détail d'un incident : un incident sans prestataire n'a personne à signaler.
+    public boolean prestataireEstSousSurveillance(Incident incident) {
+        Prestataire prestataire = incident.getPrestataire();
+        return prestataire != null && prestataireService.estSousSurveillance(prestataire.getId());
+    }
+
     @PreAuthorize("hasRole('RESPONSABLE')")
     public Incident trouverIncidentEvaluable(Integer incidentId) {
         Incident incident = trouverIncident(incidentId);

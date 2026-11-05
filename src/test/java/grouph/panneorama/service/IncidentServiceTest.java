@@ -198,6 +198,25 @@ class IncidentServiceTest {
     }
 
     @Test
+    void leDetailSignaleUnPrestataireAffecteSousSurveillance() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        Prestataire surveille = new Prestataire();
+        surveille.setId(2);
+        incident.affecterPrestataire(surveille);
+        when(prestataireService.estSousSurveillance(2)).thenReturn(true);
+
+        assertThat(incidentService.prestataireEstSousSurveillance(incident)).isTrue();
+    }
+
+    @Test
+    void unIncidentSansPrestataireNaPersonneASignaler() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+
+        assertThat(incidentService.prestataireEstSousSurveillance(incident)).isFalse();
+        verify(prestataireService, never()).estSousSurveillance(any());
+    }
+
+    @Test
     void trouverIncidentAffectableResoluLeveIncidentResoluNonAffectable() {
         Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(10));
         incident.resoudre(MAINTENANT);

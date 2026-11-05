@@ -5,8 +5,8 @@ import grouph.panneorama.modele.Equipement;
 import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Incident;
 import grouph.panneorama.modele.Prestataire;
+import grouph.panneorama.modele.RegleSurveillance;
 import grouph.panneorama.modele.Station;
-import grouph.panneorama.modele.SurveillancePrestataire;
 import grouph.panneorama.modele.TypeEquipement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 class EvaluationRepositoryTest {
     private static final LocalDateTime DEBUT = LocalDateTime.of(2026, 10, 1, 9, 0);
-    private static final Limit FENETRE = Limit.of(SurveillancePrestataire.TAILLE_FENETRE);
+    private static final Limit FENETRE = Limit.of(RegleSurveillance.TAILLE_FENETRE);
 
     @Autowired private EvaluationRepository evaluationRepository;
     @Autowired private PrestataireRepository prestataireRepository;

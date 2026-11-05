@@ -5,13 +5,14 @@ import grouph.panneorama.exception.PrestataireIntrouvableException;
 import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Prestataire;
 import grouph.panneorama.modele.RegleSurveillance;
-import grouph.panneorama.modele.SurveillancePrestataire;
 import grouph.panneorama.repository.EvaluationRepository;
 import grouph.panneorama.repository.PrestataireRepository;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class PrestataireService {
@@ -38,7 +39,7 @@ public class PrestataireService {
     // limitées à la fenêtre de surveillance.
     public List<Evaluation> listerDernieresEvaluations(Integer prestataireId) {
         return evaluationRepository.listerPlusRecentesDuPrestataire(prestataireId,
-                Limit.of(SurveillancePrestataire.TAILLE_FENETRE));
+                Limit.of(RegleSurveillance.TAILLE_FENETRE));
     }
 
     // PS4 : le statut est recalculé à chaque appel à partir des dernières évaluations, jamais enregistré.
@@ -47,5 +48,13 @@ public class PrestataireService {
                 .map(Evaluation::getNote)
                 .toList();
         return RegleSurveillance.estSousSurveillance(notesDuPlusRecentAuPlusAncien);
+    }
+
+    // Formulaire d'affectation : la vue signale ces prestataires sans refaire le calcul (PS7).
+    public Set<Integer> listerIdsSousSurveillance() {
+        return prestataireRepository.findAll().stream()
+                .map(Prestataire::getId)
+                .filter(this::estSousSurveillance)
+                .collect(Collectors.toSet());
     }
 }

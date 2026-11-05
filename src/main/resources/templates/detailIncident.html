@@ -48,8 +48,11 @@
                 <dd th:text="${#temporals.format(incident.dateResolution, 'dd/MM/yyyy HH:mm')}"></dd>
             </th:block>
             <dt>Prestataire</dt>
-            <dd th:if="${incident.prestataire != null}"
-                th:text="|${incident.prestataire.nom} (${incident.prestataire.contact})|"></dd>
+            <dd th:if="${incident.prestataire != null}">
+                <span th:text="|${incident.prestataire.nom} (${incident.prestataire.contact})|"></span>
+                <span class="badge badge-surveillance" th:if="${prestataireSousSurveillance}"
+                      th:text="${T(grouph.panneorama.modele.RegleSurveillance).MENTION}"></span>
+            </dd>
             <dd th:unless="${incident.prestataire != null}" class="valeur-absente">Aucun prestataire affecté</dd>
         </dl>
         <a class="bouton-secondaire" th:unless="${incident.estResolu()}" sec:authorize="hasRole('RESPONSABLE')"
