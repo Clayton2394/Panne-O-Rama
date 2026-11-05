@@ -708,5 +708,5 @@ l'interface et cette section par Ivan.
   quelques prestataires ; avec plusieurs centaines, il faudrait calculer les moyennes glissantes en une seule
   requête (fonction de fenêtrage `ROW_NUMBER()`).
 - L'API REST ne permet pas d'affecter un prestataire : PS5 ne concerne donc que l'interface web.
-- Aucun test automatisé ne vérifie le rendu des vues (absence de tests `MockMvc`, déjà signalée) ; l'interface
-  a été vérifiée à la main.
+- Aucun test automatisé ne vérifie le rendu des vues (absence de tests `MockMvc`, déjà signalée). L'avertissement
+  de PS5 a été vérifié à la main ; l'affichage de la mention (PS7) n'est couvert que par les tests des services.
