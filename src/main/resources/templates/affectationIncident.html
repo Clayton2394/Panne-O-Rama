@@ -35,9 +35,12 @@
                 th:classappend="${#fields.hasErrors('prestataireId')} ? 'champ-invalide'">
             <option value="">-- Choisir un prestataire --</option>
             <option th:each="prestataire : ${prestataires}" th:value="${prestataire.id}"
+                    th:with="nomAffiche=${prestatairesSousSurveillance.contains(prestataire.id)
+                             ? prestataire.nom + ' (' + T(grouph.panneorama.modele.RegleSurveillance).MENTION + ')'
+                             : prestataire.nom}"
                     th:text="${prestataire.estEvalue()}
-                             ? |${prestataire.nom} (${prestataire.contact}) · ★ ${#numbers.formatDecimal(prestataire.noteMoyenne, 1, 1, 'COMMA')} / 5 sur ${prestataire.nombreEvaluations} évaluation(s)|
-                             : |${prestataire.nom} (${prestataire.contact}) · pas encore évalué|"></option>
+                             ? |${nomAffiche} (${prestataire.contact}) · ★ ${#numbers.formatDecimal(prestataire.noteMoyenne, 1, 1, 'COMMA')} / 5 sur ${prestataire.nombreEvaluations} évaluation(s)|
+                             : |${nomAffiche} (${prestataire.contact}) · pas encore évalué|"></option>
         </select>
         <p class="message-erreur" th:each="erreur : ${#fields.errors('prestataireId')}" th:text="${erreur}"></p>
 

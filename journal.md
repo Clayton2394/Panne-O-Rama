@@ -637,3 +637,76 @@ réalisées. Nous avons laissé de côté, faute de temps et pour privilégier l
      l'utilisateur, comme les seuils de 48 h et 72 h.
    - De la même façon, une restriction de profil se vérifie sur le serveur (`@PreAuthorize`) : masquer un
      bouton n'est qu'un confort d'affichage.
+
+---
+
+## Évolution séance finale
+
+Évolution « **Prestataire sous surveillance** » (complément LSI2 du 5 novembre 2026) : un prestataire est
+sous surveillance lorsque la moyenne de ses 5 dernières évaluations est strictement inférieure à 3.
+
+### Ce qui a été réalisé, et où
+
+| Règle | Réalisation | Fichiers principaux |
+|---|---|---|
+| PS1 — les 5 dernières évaluations | Requête JPQL triée par date d'évaluation décroissante puis identifiant décroissant, sur les incidents affectés au prestataire ; la taille de la fenêtre est passée en paramètre (`Limit`) | `EvaluationRepository.listerPlusRecentesDuPrestataire`, `PrestataireService.listerDernieresEvaluations` |
+| PS2 — moins de 5 évaluations | Pas de moyenne (`Optional.empty()`), donc jamais sous surveillance | `RegleSurveillance.moyenne` |
+| PS3 — seuil strict | Sous surveillance si la moyenne est **strictement** inférieure à 3,0 | `RegleSurveillance.estSousSurveillance` |
+| PS4 — fenêtre glissante, statut recalculé | Seules les 5 plus récentes sont lues ; le statut est recalculé à chaque appel et n'existe dans aucune table | `PrestataireService.estSousSurveillance` |
+| PS5 — confirmation explicite | Sans confirmation, l'affectation ou la réaffectation est refusée **avant** toute modification : rien n'est enregistré ni tracé au journal (RG10) | `IncidentService.affecterPrestataire`, `ConfirmationSurveillanceRequiseException`, `AffectationPrestataireFormulaire`, `IncidentControleur` |
+| PS6 — un seul endroit | `TAILLE_FENETRE = 5`, `SEUIL_MOYENNE = 3.0` et la mention « sous surveillance » ne sont définis que dans `RegleSurveillance`, réutilisée par la requête, le service, le message d'erreur et les vues | `RegleSurveillance` |
+| PS7 — règle hors contrôleurs et vues | Le calcul est dans le modèle (`RegleSurveillance`) et les services ; les vues reçoivent un résultat déjà calculé | `PrestataireService.listerIdsSousSurveillance`, `IncidentService.prestataireEstSousSurveillance` |
+
+**Interface.**
+
+- Dans la liste du formulaire d'affectation, le libellé d'un prestataire surveillé contient la mention, par
+  exemple « Dupont Réseaux (sous surveillance) (contact) · ★ 2,8 / 5 sur 5 évaluation(s) ». Rien n'est ajouté
+  pour les autres.
+- À la première soumission pour un prestataire surveillé, la page d'affectation revient avec un encadré :
+  « Le prestataire … est sous surveillance : la moyenne de ses 5 dernières évaluations est inférieure à 3,0.
+  Confirmez l'affectation pour l'enregistrer. », suivi d'une case à cocher. Une fois la case cochée, la même
+  soumission enregistre l'affectation.
+- Sur le détail d'un incident, un badge « sous surveillance » apparaît à côté du prestataire concerné.
+
+**Répartition.** PS2 et PS3 (`RegleSurveillance` et ses tests) ont été réalisées par Clayton ; PS1, PS4 à PS7,
+l'interface et cette section par Ivan.
+
+### Choix de conception et raccourcis
+
+- **La règle est une classe du modèle sans dépendance** (`RegleSurveillance`) : elle prend une liste de notes
+  et se teste en Java pur, sur les exemples de l'énoncé. Le service se contente d'aller chercher les notes en
+  base et de les lui passer.
+- **La base ne lit que la fenêtre utile.** Plutôt que de charger toutes les évaluations puis de garder les
+  5 dernières en Java, la requête trie et limite côté base. Le `Limit` est construit à partir de
+  `RegleSurveillance.TAILLE_FENETRE` : la taille n'est pas écrite en dur dans le nom de la méthode (ce
+  qu'aurait imposé une requête dérivée `findTop5…`), ce qui respecte PS6.
+- **Forme de la confirmation : une case à cocher.** Le refus prend la forme d'une exception métier
+  (`ConfirmationSurveillanceRequiseException`, sous-classe d'`OperationInterditeException`), cohérente avec la
+  stratégie d'exceptions du projet. Le contrôleur l'intercepte pour réafficher le formulaire avec la demande
+  de confirmation au lieu de la page d'erreur générique. C'est la solution la plus simple : pas de page
+  supplémentaire, et le responsable garde sous les yeux le choix qu'il est en train de faire.
+- **L'ordre des contrôles compte.** Le service vérifie d'abord que l'incident n'est pas résolu (RG5), puis la
+  surveillance : on ne demande jamais de confirmer une affectation qui serait refusée de toute façon.
+- **Raccourci pris :** la confirmation est un simple booléen, elle n'est pas liée à un prestataire précis.
+  Si, après la demande de confirmation, l'utilisateur coche la case puis choisit un *autre* prestataire
+  surveillé, l'affectation passe sans nouvelle demande. Lier la confirmation à l'identifiant du prestataire
+  (champ caché) fermerait ce cas.
+
+### Tests ajoutés
+
+| Classe | Tests | Ce qui est vérifié |
+|---|---|---|
+| `RegleSurveillanceTest` | 8 | PS2 (0 et 4 évaluations : pas de moyenne, jamais surveillé), PS3 (3,0 pile non surveillé, 2,8 surveillé, 3,4 non surveillé), exemples 1, 2, 6 et 7 |
+| `EvaluationRepositoryTest` (`@DataJpaTest`, H2) | 4 | PS1 sur la vraie requête : les 5 plus récentes dans l'ordre (exemple 4), départage par identifiant à date égale, évaluations des autres prestataires ignorées, moins de 5 évaluations toutes renvoyées |
+| `PrestataireServiceTest` | 6 | fenêtre issue de `RegleSurveillance`, exemples 1, 3, 4 et 5 de bout en bout (fenêtre glissante, PS4), liste des prestataires à signaler |
+| `IncidentServiceTest` | 6 | PS5 : refus sans confirmation (incident inchangé, aucun événement), affectation enregistrée avec confirmation, réaffectation refusée qui conserve l'ancien prestataire, incident résolu refusé avant toute demande de confirmation ; mention sur le détail, et aucun calcul pour un incident sans prestataire |
+
+### Limites connues
+
+- Le raccourci de la confirmation décrit plus haut.
+- Sur la page d'affectation, le statut est calculé **une requête par prestataire**. C'est négligeable avec
+  quelques prestataires ; avec plusieurs centaines, il faudrait calculer les moyennes glissantes en une seule
+  requête (fonction de fenêtrage `ROW_NUMBER()`).
+- L'API REST ne permet pas d'affecter un prestataire : PS5 ne concerne donc que l'interface web.
+- Aucun test automatisé ne vérifie le rendu des vues (absence de tests `MockMvc`, déjà signalée) ; l'interface
+  a été vérifiée à la main.

@@ -79,6 +79,7 @@ public class IncidentControleur {
         Incident incident = incidentService.trouverIncident(incidentId);
         model.addAttribute("incident", incident);
         model.addAttribute("dureeOuverture", incidentService.calculerDureeOuverture(incident));
+        model.addAttribute("prestataireSousSurveillance", incidentService.prestataireEstSousSurveillance(incident));
         incidentService.trouverEvaluation(incidentId)
                 .ifPresent(evaluation -> model.addAttribute("evaluation", evaluation));
         return "detailIncident";
@@ -114,10 +115,8 @@ public class IncidentControleur {
         if (incident.getPrestataire() != null) {
             formulaire.setPrestataireId(incident.getPrestataire().getId());
         }
-        model.addAttribute("incident", incident);
-        model.addAttribute("prestataires", prestataireService.listerPrestatairesAvecNote());
         model.addAttribute("formulaire", formulaire);
-        return "affectationIncident";
+        return afficherAffectation(incident, model);
     }
 
     @PatchMapping("/incidents/{incidentId}/prestataire")
@@ -140,8 +139,13 @@ public class IncidentControleur {
     }
 
     private String reafficherFormulaireAffectation(Integer incidentId, Model model) {
-        model.addAttribute("incident", incidentService.trouverIncidentAffectable(incidentId));
+        return afficherAffectation(incidentService.trouverIncidentAffectable(incidentId), model);
+    }
+
+    private String afficherAffectation(Incident incident, Model model) {
+        model.addAttribute("incident", incident);
         model.addAttribute("prestataires", prestataireService.listerPrestatairesAvecNote());
+        model.addAttribute("prestatairesSousSurveillance", prestataireService.listerIdsSousSurveillance());
         return "affectationIncident";
     }
 
