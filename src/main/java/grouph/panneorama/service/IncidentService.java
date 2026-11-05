@@ -1,6 +1,7 @@
 package grouph.panneorama.service;
 
 import grouph.panneorama.evenement.ChangementIncident;
+import grouph.panneorama.exception.ConfirmationSurveillanceRequiseException;
 import grouph.panneorama.exception.IncidentDejaEvalueException;
 import grouph.panneorama.exception.IncidentIntrouvableException;
 import grouph.panneorama.modele.Equipement;
@@ -85,9 +86,14 @@ public class IncidentService {
 
     @Transactional
     @PreAuthorize("hasRole('RESPONSABLE')")
-    public Incident affecterPrestataire(Integer incidentId, Integer prestataireId) {
+    public Incident affecterPrestataire(Integer incidentId, Integer prestataireId, boolean surveillanceConfirmee) {
         Incident incident = trouverIncident(incidentId);
         Prestataire prestataire = prestataireService.trouverPrestataire(prestataireId);
+        incident.verifierAffectable();
+        // PS5 : un prestataire sous surveillance ne s'affecte qu'après confirmation explicite ; sinon rien n'est modifié.
+        if (!surveillanceConfirmee && prestataireService.estSousSurveillance(prestataireId)) {
+            throw new ConfirmationSurveillanceRequiseException(prestataire.getNom());
+        }
         Prestataire precedent = incident.getPrestataire();
         incident.affecterPrestataire(prestataire);
         if (precedent == null) {

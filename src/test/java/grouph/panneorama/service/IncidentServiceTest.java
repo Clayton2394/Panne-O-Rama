@@ -1,5 +1,6 @@
 package grouph.panneorama.service;
 
+import grouph.panneorama.exception.ConfirmationSurveillanceRequiseException;
 import grouph.panneorama.exception.EquipementIntrouvableException;
 import grouph.panneorama.exception.IncidentDejaEvalueException;
 import grouph.panneorama.exception.IncidentIntrouvableException;
@@ -120,7 +121,7 @@ class IncidentServiceTest {
         when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
         when(prestataireService.trouverPrestataire(2)).thenReturn(prestataire);
 
-        Incident incidentAffecte = incidentService.affecterPrestataire(1, 2);
+        Incident incidentAffecte = incidentService.affecterPrestataire(1, 2, false);
 
         assertThat(incidentAffecte.getPrestataire()).isSameAs(prestataire);
         assertThat(incidentAffecte.getStatut()).isEqualTo(StatutIncident.AFFECTE);
@@ -132,10 +133,68 @@ class IncidentServiceTest {
         when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
         when(prestataireService.trouverPrestataire(99)).thenThrow(new PrestataireIntrouvableException(99));
 
-        assertThatThrownBy(() -> incidentService.affecterPrestataire(1, 99))
+        assertThatThrownBy(() -> incidentService.affecterPrestataire(1, 99, false))
                 .isInstanceOf(PrestataireIntrouvableException.class);
         assertThat(incident.getPrestataire()).isNull();
         assertThat(incident.getStatut()).isEqualTo(StatutIncident.NON_AFFECTE);
+    }
+
+    @Test
+    void affecterUnPrestataireSousSurveillanceSansConfirmationEstRefuseEtNeChangeRien() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        Prestataire surveille = new Prestataire();
+        surveille.setNom("Dupont Réseaux");
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+        when(prestataireService.trouverPrestataire(2)).thenReturn(surveille);
+        when(prestataireService.estSousSurveillance(2)).thenReturn(true);
+
+        assertThatThrownBy(() -> incidentService.affecterPrestataire(1, 2, false))
+                .isInstanceOf(ConfirmationSurveillanceRequiseException.class)
+                .hasMessageContaining("Dupont Réseaux")
+                .hasMessageContaining("surveillance");
+        assertThat(incident.getPrestataire()).isNull();
+        assertThat(incident.getStatut()).isEqualTo(StatutIncident.NON_AFFECTE);
+        verifyNoInteractions(evenements);
+    }
+
+    @Test
+    void affecterUnPrestataireSousSurveillanceAvecConfirmationEnregistreLAffectation() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        Prestataire surveille = new Prestataire();
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+        when(prestataireService.trouverPrestataire(2)).thenReturn(surveille);
+        when(prestataireService.estSousSurveillance(2)).thenReturn(true);
+
+        Incident incidentAffecte = incidentService.affecterPrestataire(1, 2, true);
+
+        assertThat(incidentAffecte.getPrestataire()).isSameAs(surveille);
+        assertThat(evenementPublie().type()).isEqualTo(TypeEvenementIncident.AFFECTATION);
+    }
+
+    @Test
+    void reaffecterAUnPrestataireSousSurveillanceSansConfirmationConserveLAncienPrestataire() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT);
+        Prestataire actuel = new Prestataire();
+        incident.affecterPrestataire(actuel);
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+        when(prestataireService.trouverPrestataire(2)).thenReturn(new Prestataire());
+        when(prestataireService.estSousSurveillance(2)).thenReturn(true);
+
+        assertThatThrownBy(() -> incidentService.affecterPrestataire(1, 2, false))
+                .isInstanceOf(ConfirmationSurveillanceRequiseException.class);
+        assertThat(incident.getPrestataire()).isSameAs(actuel);
+    }
+
+    @Test
+    void unIncidentResoluEstRefuseAvantTouteDemandeDeConfirmation() {
+        Incident incident = new Incident(new Equipement(), "Porte bloquée au quai 1", MAINTENANT.minusDays(1));
+        incident.resoudre(MAINTENANT);
+        when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
+        when(prestataireService.trouverPrestataire(2)).thenReturn(new Prestataire());
+        when(prestataireService.estSousSurveillance(2)).thenReturn(true);
+
+        assertThatThrownBy(() -> incidentService.affecterPrestataire(1, 2, false))
+                .isInstanceOf(IncidentResoluNonAffectableException.class);
     }
 
     @Test
@@ -232,7 +291,7 @@ class IncidentServiceTest {
         when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
         when(prestataireService.trouverPrestataire(2)).thenReturn(new Prestataire());
 
-        incidentService.affecterPrestataire(1, 2);
+        incidentService.affecterPrestataire(1, 2, false);
 
         assertThat(evenementPublie().type()).isEqualTo(TypeEvenementIncident.AFFECTATION);
     }
@@ -244,7 +303,7 @@ class IncidentServiceTest {
         when(incidentRepository.trouverAvecEquipementEtPrestataire(1)).thenReturn(Optional.of(incident));
         when(prestataireService.trouverPrestataire(2)).thenReturn(new Prestataire());
 
-        incidentService.affecterPrestataire(1, 2);
+        incidentService.affecterPrestataire(1, 2, false);
 
         assertThat(evenementPublie().type()).isEqualTo(TypeEvenementIncident.REAFFECTATION);
     }

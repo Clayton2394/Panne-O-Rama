@@ -1,5 +1,6 @@
 package grouph.panneorama.controleur;
 
+import grouph.panneorama.exception.ConfirmationSurveillanceRequiseException;
 import grouph.panneorama.formulaire.AffectationPrestataireFormulaire;
 import grouph.panneorama.formulaire.DeclarationIncidentFormulaire;
 import grouph.panneorama.formulaire.DescriptionIncidentFormulaire;
@@ -125,12 +126,23 @@ public class IncidentControleur {
                                       BindingResult resultatValidation,
                                       Model model) {
         if (resultatValidation.hasErrors()) {
-            model.addAttribute("incident", incidentService.trouverIncidentAffectable(incidentId));
-            model.addAttribute("prestataires", prestataireService.listerPrestatairesAvecNote());
-            return "affectationIncident";
+            return reafficherFormulaireAffectation(incidentId, model);
         }
-        incidentService.affecterPrestataire(incidentId, formulaire.getPrestataireId());
+        try {
+            incidentService.affecterPrestataire(incidentId, formulaire.getPrestataireId(),
+                    formulaire.isSurveillanceConfirmee());
+        } catch (ConfirmationSurveillanceRequiseException demandeConfirmation) {
+            // PS5 : rien n'a été enregistré, le formulaire revient avec la case de confirmation.
+            model.addAttribute("demandeConfirmation", demandeConfirmation.getMessage());
+            return reafficherFormulaireAffectation(incidentId, model);
+        }
         return "redirect:/incidents/" + incidentId;
+    }
+
+    private String reafficherFormulaireAffectation(Integer incidentId, Model model) {
+        model.addAttribute("incident", incidentService.trouverIncidentAffectable(incidentId));
+        model.addAttribute("prestataires", prestataireService.listerPrestatairesAvecNote());
+        return "affectationIncident";
     }
 
     @PatchMapping("/incidents/{incidentId}/resolution")
