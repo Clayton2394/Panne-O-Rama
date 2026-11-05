@@ -4,6 +4,7 @@ import grouph.panneorama.dto.PrestataireNote;
 import grouph.panneorama.exception.PrestataireIntrouvableException;
 import grouph.panneorama.modele.Evaluation;
 import grouph.panneorama.modele.Prestataire;
+import grouph.panneorama.modele.RegleSurveillance;
 import grouph.panneorama.modele.SurveillancePrestataire;
 import grouph.panneorama.repository.EvaluationRepository;
 import grouph.panneorama.repository.PrestataireRepository;
@@ -38,5 +39,13 @@ public class PrestataireService {
     public List<Evaluation> listerDernieresEvaluations(Integer prestataireId) {
         return evaluationRepository.listerPlusRecentesDuPrestataire(prestataireId,
                 Limit.of(SurveillancePrestataire.TAILLE_FENETRE));
+    }
+
+    // PS4 : le statut est recalculé à chaque appel à partir des dernières évaluations, jamais enregistré.
+    public boolean estSousSurveillance(Integer prestataireId) {
+        List<Integer> notesDuPlusRecentAuPlusAncien = listerDernieresEvaluations(prestataireId).stream()
+                .map(Evaluation::getNote)
+                .toList();
+        return RegleSurveillance.estSousSurveillance(notesDuPlusRecentAuPlusAncien);
     }
 }

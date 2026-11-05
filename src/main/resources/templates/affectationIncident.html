@@ -41,6 +41,14 @@
         </select>
         <p class="message-erreur" th:each="erreur : ${#fields.errors('prestataireId')}" th:text="${erreur}"></p>
 
+        <div class="alerte alerte-avertissement" th:if="${demandeConfirmation != null}">
+            <p th:text="${demandeConfirmation}"></p>
+            <label class="case-a-cocher">
+                <input type="checkbox" th:field="*{surveillanceConfirmee}">
+                Je confirme l'affectation à ce prestataire sous surveillance
+            </label>
+        </div>
+
         <button type="submit">Enregistrer</button>
     </form>
 
